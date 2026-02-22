@@ -89,5 +89,48 @@ namespace TextureCropOptimizer.Tests
         {
             Assert.IsTrue(PowerOfTwoCalculator.IsWorthOptimizing(4096, 1024));
         }
+
+        [Test]
+        public void Calculate_ExactPoTBoundary_ReturnsExactPoT()
+        {
+            // width=0.5 -> 4096 * 0.5 = 2048 (exactly PoT)
+            var usedRect = new Rect(0.25f, 0.25f, 0.5f, 0.5f);
+            var result = PowerOfTwoCalculator.Calculate(usedRect, 4096);
+            Assert.AreEqual(2048, result);
+        }
+
+        [Test]
+        public void Calculate_OneEighth_Returns512()
+        {
+            var usedRect = new Rect(0.0f, 0.0f, 0.125f, 0.125f);
+            var result = PowerOfTwoCalculator.Calculate(usedRect, 4096);
+            Assert.AreEqual(512, result);
+        }
+
+        [Test]
+        public void Calculate_SmallOriginal_1024_HalfUsed_Returns512()
+        {
+            var usedRect = new Rect(0.0f, 0.0f, 0.5f, 0.5f);
+            var result = PowerOfTwoCalculator.Calculate(usedRect, 1024);
+            Assert.AreEqual(512, result);
+        }
+
+        [Test]
+        public void Calculate_WidthDominant_UsesWidth()
+        {
+            // width=0.5, height=0.1 -> max=0.5 -> 2048
+            var usedRect = new Rect(0.0f, 0.0f, 0.5f, 0.1f);
+            var result = PowerOfTwoCalculator.Calculate(usedRect, 4096);
+            Assert.AreEqual(2048, result);
+        }
+
+        [Test]
+        public void Calculate_HeightDominant_UsesHeight()
+        {
+            // width=0.1, height=0.5 -> max=0.5 -> 2048
+            var usedRect = new Rect(0.0f, 0.0f, 0.1f, 0.5f);
+            var result = PowerOfTwoCalculator.Calculate(usedRect, 4096);
+            Assert.AreEqual(2048, result);
+        }
     }
 }

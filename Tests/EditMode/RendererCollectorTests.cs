@@ -109,6 +109,46 @@ namespace TextureCropOptimizer.Tests
             Assert.AreEqual(0, result.Count);
         }
 
+        [Test]
+        public void Collect_MultipleMaterials_ReturnsAllMaterials()
+        {
+            _root = new GameObject("Avatar");
+            var child = new GameObject("Body");
+            child.transform.SetParent(_root.transform);
+
+            var mf = child.AddComponent<MeshFilter>();
+            mf.sharedMesh = CreateSimpleMesh();
+            var mr = child.AddComponent<MeshRenderer>();
+            var mat1 = new Material(Shader.Find("Standard"));
+            var mat2 = new Material(Shader.Find("Standard"));
+            mr.sharedMaterials = new[] { mat1, mat2 };
+
+            var result = RendererCollector.Collect(_root);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(2, result[0].Materials.Length);
+            Assert.AreSame(mat1, result[0].Materials[0]);
+            Assert.AreSame(mat2, result[0].Materials[1]);
+
+            Object.DestroyImmediate(mat1);
+            Object.DestroyImmediate(mat2);
+        }
+
+        [Test]
+        public void Collect_InactiveChild_StillCollected()
+        {
+            // includeInactive=true なので非アクティブでも収集される
+            _root = new GameObject("Avatar");
+            var child = new GameObject("Body");
+            child.transform.SetParent(_root.transform);
+            child.SetActive(false);
+            SetupMeshRenderer(child);
+
+            var result = RendererCollector.Collect(_root);
+
+            Assert.AreEqual(1, result.Count);
+        }
+
         private Mesh CreateSimpleMesh()
         {
             var mesh = new Mesh();

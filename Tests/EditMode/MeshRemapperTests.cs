@@ -115,6 +115,46 @@ namespace TextureCropOptimizer.Tests
             }
         }
 
+        [Test]
+        public void Remap_PreservesNormals()
+        {
+            _source = CreateQuadMeshWithNormals(
+                new Vector2(0.0f, 0.0f), new Vector2(0.5f, 0.0f),
+                new Vector2(0.0f, 0.5f), new Vector2(0.5f, 0.5f));
+
+            _result = MeshRemapper.Remap(_source, new Rect(0.0f, 0.0f, 0.5f, 0.5f));
+
+            var sourceNormals = _source.normals;
+            var resultNormals = _result.normals;
+            Assert.AreEqual(sourceNormals.Length, resultNormals.Length);
+            for (int i = 0; i < sourceNormals.Length; i++)
+            {
+                Assert.AreEqual(sourceNormals[i].x, resultNormals[i].x, 0.001f);
+                Assert.AreEqual(sourceNormals[i].y, resultNormals[i].y, 0.001f);
+                Assert.AreEqual(sourceNormals[i].z, resultNormals[i].z, 0.001f);
+            }
+        }
+
+        [Test]
+        public void Remap_PreservesVertexPositions()
+        {
+            _source = CreateQuadMesh(
+                new Vector2(0.0f, 0.0f), new Vector2(0.5f, 0.0f),
+                new Vector2(0.0f, 0.5f), new Vector2(0.5f, 0.5f));
+
+            _result = MeshRemapper.Remap(_source, new Rect(0.0f, 0.0f, 0.5f, 0.5f));
+
+            var sourceVerts = _source.vertices;
+            var resultVerts = _result.vertices;
+            Assert.AreEqual(sourceVerts.Length, resultVerts.Length);
+            for (int i = 0; i < sourceVerts.Length; i++)
+            {
+                Assert.AreEqual(sourceVerts[i].x, resultVerts[i].x, 0.001f);
+                Assert.AreEqual(sourceVerts[i].y, resultVerts[i].y, 0.001f);
+                Assert.AreEqual(sourceVerts[i].z, resultVerts[i].z, 0.001f);
+            }
+        }
+
         private Mesh CreateQuadMesh(Vector2 uv0, Vector2 uv1, Vector2 uv2, Vector2 uv3)
         {
             var mesh = new Mesh();
@@ -125,6 +165,17 @@ namespace TextureCropOptimizer.Tests
             };
             mesh.triangles = new[] { 0, 1, 2, 1, 3, 2 };
             mesh.uv = new[] { uv0, uv1, uv2, uv3 };
+            return mesh;
+        }
+
+        private Mesh CreateQuadMeshWithNormals(Vector2 uv0, Vector2 uv1, Vector2 uv2, Vector2 uv3)
+        {
+            var mesh = CreateQuadMesh(uv0, uv1, uv2, uv3);
+            mesh.normals = new[]
+            {
+                Vector3.back, Vector3.back,
+                Vector3.back, Vector3.back
+            };
             return mesh;
         }
     }

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace TextureCropOptimizer
@@ -45,25 +44,57 @@ namespace TextureCropOptimizer
 
             TCOLogger.Info("Pipeline", $"{textureGroups.Count}個のテクスチャグループを検出しました", avatarRoot.name);
 
-            // 3. 各テクスチャグループを処理
+            // === Phase 1: 解析 — 各テクスチャグループのUsedRectと最適化サイズを算出 ===
+            var analysisResults = new Dictionary<Texture2D, AnalysisResult>();
+
             foreach (var kvp in textureGroups)
             {
                 var texture = kvp.Key;
                 var group = kvp.Value;
 
-                ProcessTextureGroup(texture, group, entries);
+                var result = AnalyzeTextureGroup(texture, group);
+                if (result != null)
+                    analysisResults[texture] = result;
             }
+
+            if (analysisResults.Count == 0)
+            {
+                TCOLogger.Info("Pipeline", "最適化可能なテクスチャがありませんでした", avatarRoot.name);
+                return;
+            }
+
+            // === Phase 2: 適用 — テクスチャ再構成・メッシュリマップ・マテリアル差し替え ===
+            // マテリアルとメッシュのマップをグループ横断で共有
+            var materialMap = new Dictionary<Material, Material>();
+            var meshMap = new Dictionary<Mesh, Mesh>();
+
+            foreach (var kvp in analysisResults)
+            {
+                var texture = kvp.Key;
+                var analysis = kvp.Value;
+                var group = textureGroups[texture];
+
+                ApplyOptimization(texture, group, analysis, materialMap, meshMap);
+            }
+
+            // Rendererに新しいメッシュ・マテリアルを適用
+            ApplyToRenderers(entries, materialMap, meshMap);
 
             TCOLogger.Info("Pipeline", "最適化が完了しました", avatarRoot.name);
         }
 
-        private static void ProcessTextureGroup(Texture2D texture, TextureGroup group, List<RendererEntry> entries)
+        private class AnalysisResult
         {
-            // 4. UV島を検出 → 各島のAABBを算出 → 和集合でUsedRect確定
-            var allIslandBounds = new List<Rect>();
+            public Rect UsedRect;
+            public int OriginalSize;
+            public int OptimizedSize;
+        }
 
-            // 同一テクスチャを参照する全メッシュのUV0を収集
+        private static AnalysisResult AnalyzeTextureGroup(Texture2D texture, TextureGroup group)
+        {
+            var allIslandBounds = new List<Rect>();
             var processedMeshes = new HashSet<Mesh>();
+
             foreach (var reference in group.References)
             {
                 if (processedMeshes.Contains(reference.Mesh))
@@ -76,7 +107,7 @@ namespace TextureCropOptimizer
                     TCOLogger.Warning("Pipeline",
                         "UV0が範囲外またはUVなし。スキップします",
                         texture.name);
-                    return;
+                    return null;
                 }
 
                 allIslandBounds.AddRange(islandBounds);
@@ -85,12 +116,10 @@ namespace TextureCropOptimizer
             if (allIslandBounds.Count == 0)
             {
                 TCOLogger.Info("Pipeline", "UV島が見つかりませんでした。スキップします", texture.name);
-                return;
+                return null;
             }
 
             var usedRect = UVRectCalculator.CalculateUsedRect(allIslandBounds);
-
-            // 5. UsedRectから必要最小の2のべき乗サイズを算出
             int originalSize = Mathf.Max(texture.width, texture.height);
             int optimizedSize = PowerOfTwoCalculator.Calculate(usedRect, originalSize);
 
@@ -99,36 +128,50 @@ namespace TextureCropOptimizer
                 TCOLogger.Info("Pipeline",
                     $"サイズ削減が不十分です（{originalSize} → {optimizedSize}）。スキップします",
                     texture.name);
-                return;
+                return null;
             }
 
             TCOLogger.Info("Pipeline",
                 $"テクスチャを最適化します: {originalSize} → {optimizedSize}",
                 texture.name);
 
-            // 6-7. テクスチャを複製・再構成
+            return new AnalysisResult
+            {
+                UsedRect = usedRect,
+                OriginalSize = originalSize,
+                OptimizedSize = optimizedSize
+            };
+        }
+
+        private static void ApplyOptimization(
+            Texture2D texture,
+            TextureGroup group,
+            AnalysisResult analysis,
+            Dictionary<Material, Material> materialMap,
+            Dictionary<Mesh, Mesh> meshMap)
+        {
+            // テクスチャを複製・再構成
             Texture2D newTexture;
             using (new TextureReadableHandler(texture))
             {
-                newTexture = TextureRebuilder.Rebuild(texture, usedRect, optimizedSize);
+                newTexture = TextureRebuilder.Rebuild(texture, analysis.UsedRect, analysis.OptimizedSize);
             }
 
-            // 8. メッシュを複製・UV0リマップ
-            var meshMap = new Dictionary<Mesh, Mesh>();
+            // メッシュを複製・UV0リマップ（未処理のメッシュのみ）
             foreach (var reference in group.References)
             {
                 if (!meshMap.ContainsKey(reference.Mesh))
                 {
-                    meshMap[reference.Mesh] = MeshRemapper.Remap(reference.Mesh, usedRect);
+                    meshMap[reference.Mesh] = MeshRemapper.Remap(reference.Mesh, analysis.UsedRect);
                 }
             }
 
-            // 9. マテリアルを複製・テクスチャプロパティを差し替え
-            var materialMap = new Dictionary<Material, Material>();
+            // マテリアルを複製・テクスチャプロパティを差し替え
             foreach (var reference in group.References)
             {
                 if (!materialMap.ContainsKey(reference.Material))
                 {
+                    // 新規コピーを作成
                     var textureReplacement = new Dictionary<string, Texture2D>
                     {
                         { reference.PropertyName, newTexture }
@@ -138,12 +181,17 @@ namespace TextureCropOptimizer
                 }
                 else
                 {
-                    // 同一マテリアルの別プロパティにもテクスチャを設定
+                    // 既存コピーのテクスチャプロパティを追加差し替え
                     materialMap[reference.Material].SetTexture(reference.PropertyName, newTexture);
                 }
             }
+        }
 
-            // Rendererに新しいメッシュ・マテリアルを適用
+        private static void ApplyToRenderers(
+            List<RendererEntry> entries,
+            Dictionary<Material, Material> materialMap,
+            Dictionary<Mesh, Mesh> meshMap)
+        {
             foreach (var entry in entries)
             {
                 bool modified = false;

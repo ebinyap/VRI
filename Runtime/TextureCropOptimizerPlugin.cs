@@ -19,6 +19,9 @@ namespace TextureCropOptimizer
         protected override void Configure()
         {
             InPhase(BuildPhase.Optimizing)
+                .AfterPlugin("nadena.dev.modular-avatar")
+                .AfterPlugin("com.anatawa12.avatar-optimizer")
+                .AfterPlugin("net.rs64.tex-trans-tool")
                 .Run("TextureCropOptimizer", ctx =>
                 {
                     var settings = ctx.AvatarRootObject.GetComponentInChildren<TextureCropSettings>();

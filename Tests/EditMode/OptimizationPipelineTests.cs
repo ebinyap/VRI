@@ -90,6 +90,41 @@ namespace TextureCropOptimizer.Tests
             Assert.AreSame(tex, renderer.sharedMaterial.mainTexture);
         }
 
+        [Test]
+        public void Execute_SmallUVUsage_OptimizesTexture()
+        {
+            // UV使用率25%以下 → 8x8のテクスチャが4x4に最適化される
+            _avatar = CreateAvatarWithTexture(8, 8, out var tex, out var mat, out var mesh,
+                new[] { new Vector2(0.0f, 0.0f), new Vector2(0.25f, 0.0f), new Vector2(0.0f, 0.25f) });
+
+            var settings = _avatar.AddComponent<TextureCropSettings>();
+
+            OptimizationPipeline.Execute(_avatar, settings);
+
+            // テクスチャが差し替えられているはず
+            var renderer = _avatar.GetComponentInChildren<Renderer>();
+            var newTex = renderer.sharedMaterial.mainTexture as Texture2D;
+            Assert.AreNotSame(tex, newTex);
+            // 新テクスチャは元テクスチャより小さいはず
+            Assert.Less(newTex.width, tex.width);
+        }
+
+        [Test]
+        public void Execute_EmptySettings_ProcessesAllMaterials()
+        {
+            // 設定エントリが空（除外なし） → すべてのマテリアルを処理
+            _avatar = CreateAvatarWithTexture(8, 8, out var tex, out var mat, out var mesh,
+                new[] { new Vector2(0.0f, 0.0f), new Vector2(0.25f, 0.0f), new Vector2(0.0f, 0.25f) });
+
+            var settings = _avatar.AddComponent<TextureCropSettings>();
+            // Entriesは空のまま → 除外なし
+
+            OptimizationPipeline.Execute(_avatar, settings);
+
+            var renderer = _avatar.GetComponentInChildren<Renderer>();
+            Assert.AreNotSame(tex, renderer.sharedMaterial.mainTexture);
+        }
+
         private GameObject CreateAvatarWithTexture(int texWidth, int texHeight,
             out Texture2D texture, out Material material, out Mesh mesh, Vector2[] uvs)
         {

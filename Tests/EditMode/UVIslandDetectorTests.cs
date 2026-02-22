@@ -179,5 +179,79 @@ namespace TextureCropOptimizer.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(3, result.Count);
         }
+
+        [Test]
+        public void DetectIslandBounds_ChainOfTriangles_ReturnsOneIsland()
+        {
+            // 3つの三角形が鎖状に接続 → 1島
+            var mesh = CreateMesh(
+                new[]
+                {
+                    new Vector3(0, 0, 0), new Vector3(1, 0, 0), new Vector3(0.5f, 1, 0),
+                    new Vector3(1.5f, 1, 0), new Vector3(2, 0, 0)
+                },
+                new[] { 0, 1, 2, 1, 3, 2, 1, 4, 3 },
+                new[]
+                {
+                    new Vector2(0.0f, 0.0f), new Vector2(0.2f, 0.0f), new Vector2(0.1f, 0.2f),
+                    new Vector2(0.3f, 0.2f), new Vector2(0.4f, 0.0f)
+                }
+            );
+
+            var result = UVIslandDetector.DetectIslandBounds(mesh);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(0.0f, result[0].xMin, 0.001f);
+            Assert.AreEqual(0.0f, result[0].yMin, 0.001f);
+            Assert.AreEqual(0.4f, result[0].xMax, 0.001f);
+            Assert.AreEqual(0.2f, result[0].yMax, 0.001f);
+        }
+
+        [Test]
+        public void DetectIslandBounds_UVYBelowZero_ReturnsNull()
+        {
+            var mesh = CreateMesh(
+                new[] { Vector3.zero, Vector3.right, Vector3.up },
+                new[] { 0, 1, 2 },
+                new[] { new Vector2(0.1f, -0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.1f, 0.5f) }
+            );
+
+            var result = UVIslandDetector.DetectIslandBounds(mesh);
+
+            Assert.IsNull(result);
+        }
+
+        [Test]
+        public void DetectIslandBounds_UVYAboveOne_ReturnsNull()
+        {
+            var mesh = CreateMesh(
+                new[] { Vector3.zero, Vector3.right, Vector3.up },
+                new[] { 0, 1, 2 },
+                new[] { new Vector2(0.1f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.1f, 1.5f) }
+            );
+
+            var result = UVIslandDetector.DetectIslandBounds(mesh);
+
+            Assert.IsNull(result);
+        }
+
+        [Test]
+        public void DetectIslandBounds_PointUV_ReturnsSinglePointAABB()
+        {
+            // 全頂点が同じUV座標 → width=0, height=0 のRect
+            var mesh = CreateMesh(
+                new[] { Vector3.zero, Vector3.right, Vector3.up },
+                new[] { 0, 1, 2 },
+                new[] { new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f) }
+            );
+
+            var result = UVIslandDetector.DetectIslandBounds(mesh);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(0.0f, result[0].width, 0.001f);
+            Assert.AreEqual(0.0f, result[0].height, 0.001f);
+        }
     }
 }
