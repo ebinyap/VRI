@@ -1,29 +1,81 @@
-# CLAUDE.md
+# CLAUDE.md — TextureCropOptimizer
 
-This file provides guidance to Claude Code when working in this repository.
+このファイルはClaudeがこのリポジトリで作業するための主要な指示書です。
+作業を再開する際は**必ずこのファイルを最初に読んでください**。
 
-## Project: VRI
+---
 
-<!-- TODO: Add a brief description of what VRI does -->
+## 📁 ドキュメント構成
 
-## Build & Run
+| ファイル | 内容 |
+|---|---|
+| `CLAUDE.md` | 本ファイル。作業ルール・再開手順 |
+| `SPEC.md` | 完全仕様書（全決定事項） |
+| `ARCHITECTURE.md` | モジュール設計・依存関係 |
+| `PROGRESS.md` | 作業進捗・中断ポイント記録 |
 
-<!-- TODO: Add build/run commands as the project develops -->
+---
 
-## Test
+## 🔄 作業再開手順（トークン上限到達後）
 
-<!-- TODO: Add test commands as the project develops -->
+1. `PROGRESS.md` を読んで「現在地」を把握する
+2. `ARCHITECTURE.md` で担当モジュールの位置を確認する
+3. `SPEC.md` で関連仕様を確認する
+4. `PROGRESS.md` の「次のタスク」から作業を再開する
+5. 作業終了時・中断時は必ず `PROGRESS.md` を更新する
 
-## Lint & Format
+---
 
-<!-- TODO: Add lint/format commands as the project develops -->
+## 🧱 開発ルール
 
-## Code Style & Conventions
+### RED-GREEN-REFACTOR サイクルの厳守
 
-- Follow consistent naming conventions throughout the codebase
-- Keep functions focused and small
-- Write clear commit messages
+**このプロジェクトではTDDを強制します。以下の順序を絶対に守ること。**
 
-## Repository Structure
+```
+RED    → 失敗するテストを先に書く（実装は書かない）
+GREEN  → テストが通る最小限の実装を書く
+REFACTOR → テストが通ったままコードを整理する
+```
 
-<!-- TODO: Document key directories and files as the project grows -->
+- RED をスキップして実装から書き始めることを禁止する
+- GREEN の段階では「きれいさ」より「通ること」を優先する
+- REFACTOR の段階ではテストを変更しない
+
+各モジュールの実装前に `PROGRESS.md` に「RED開始」と記録すること。
+
+### モジュール独立性の維持
+
+- 各モジュールは `ARCHITECTURE.md` に定義された依存関係のみに従う
+- モジュール間の直接参照を追加する場合は `ARCHITECTURE.md` を先に更新する
+- 1つのモジュールの変更が他のモジュールのテストを壊してはならない
+
+### 仕様変更の手順
+
+仕様を変更したい場合（人間・Claude問わず）：
+
+1. `SPEC.md` の該当箇所を更新する
+2. 変更内容と理由を `SPEC.md` の末尾の変更履歴に追記する
+3. 影響を受けるモジュールを `ARCHITECTURE.md` で確認する
+4. 影響モジュールのテストを先に修正する（RED）
+5. 実装を修正する（GREEN → REFACTOR）
+
+---
+
+## 📐 コーディング規約
+
+- 言語：C# (.NET Standard 2.1 / Unity 2022.3.22f1（2022.3 LTS）)
+- 名前空間：`TextureCropOptimizer`
+- テストフレームワーク：Unity Test Framework（EditModeテスト）
+- 1ファイル1クラス・1クラス1責務
+- publicメソッドにはXMLドキュメントコメントを付ける
+- マジックナンバーは定数として `Constants.cs` に定義する
+
+---
+
+## ⚠️ 禁止事項
+
+- 元アセット（テクスチャ・メッシュ・マテリアル）への永続的な書き込み
+- `SPEC.md` を読まずに仕様を推測して実装すること
+- テストなしでモジュールを完成とみなすこと
+- 複数モジュールを同時に実装すること（1モジュールずつ完結させる）
