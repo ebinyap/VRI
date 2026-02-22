@@ -8,10 +8,10 @@
 ## 現在地
 
 ```
-ステータス  : 未着手
-現在のモジュール : -
-現在のフェーズ   : -（RED / GREEN / REFACTOR）
-最終更新    : 初版作成
+ステータス  : 実装中
+現在のモジュール : #3 UVIslandDetector（次に着手）
+現在のフェーズ   : RED開始前
+最終更新    : 2026-02-22
 ```
 
 ---
@@ -20,8 +20,8 @@
 
 | # | モジュール | ステータス | TESTファイル | 実装ファイル | 備考 |
 |---|---|---|---|---|---|
-| 1 | Constants | ⬜ 未着手 | - | - | |
-| 2 | TCOLogger | ⬜ 未着手 | - | - | |
+| 1 | Constants | 🟢 REFACTOR完了 | Tests/EditMode/ConstantsTests.cs | Runtime/Constants.cs | |
+| 2 | TCOLogger | 🟢 REFACTOR完了 | Tests/EditMode/TCOLoggerTests.cs | Runtime/TCOLogger.cs | |
 | 3 | UVIslandDetector | ⬜ 未着手 | - | - | |
 | 4 | UVRectCalculator | ⬜ 未着手 | - | - | |
 | 5 | PowerOfTwoCalculator | ⬜ 未着手 | - | - | |
@@ -49,8 +49,8 @@
 ## 次のタスク
 
 ```
-1. プロジェクト構成・asmdefの作成
-2. モジュール#1（Constants）からRED-GREEN-REFACTORを開始
+1. モジュール#3（UVIslandDetector）のRED-GREEN-REFACTORを開始
+2. モジュール#4（UVRectCalculator）のRED-GREEN-REFACTORを開始
 ```
 
 ---
@@ -65,7 +65,7 @@
 
 | 日時 | 中断ポイント | 再開に必要な情報 |
 |---|---|---|
-| - | - | - |
+| 2026-02-22 | Constants・TCOLogger完了後 | #3 UVIslandDetectorからRED開始 |
 
 ---
 
@@ -76,3 +76,4 @@
 - Poiyomi・LiltoonのUVチャンネル設定プロパティ名は実装時に実際のシェーダーを参照して確認すること
 - `TextureReadableHandler` はusingブロックで使うことを前提とした設計
 - NDMFのExecuteOrder属性でAAO・TTTより後になるよう依存宣言を忘れずに追加すること
+- プロジェクト構成（asmdef）を作成済み：Runtime / Editor / Tests/EditMode
