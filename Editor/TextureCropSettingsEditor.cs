@@ -91,21 +91,28 @@ namespace TextureCropOptimizer.Editor
             long totalOriginalBytes = 0;
             long totalOptimizedBytes = 0;
 
-            // 除外されていないマテリアルに関連するテクスチャのみ集計
-            var excludedMats = new HashSet<Material>();
+            // 除外されていないマテリアルが参照するテクスチャを収集
+            var activeTextures = new HashSet<Texture2D>();
             foreach (var entry in settings.Entries)
             {
-                if (entry.Excluded && entry.Material != null)
-                    excludedMats.Add(entry.Material);
+                if (!entry.Excluded && entry.Material != null)
+                {
+                    var props = ShaderPropertyResolver.GetUV0TextureProperties(entry.Material);
+                    foreach (var propName in props)
+                    {
+                        var tex = entry.Material.GetTexture(propName) as Texture2D;
+                        if (tex != null && _sizeCache.ContainsKey(tex))
+                            activeTextures.Add(tex);
+                    }
+                }
             }
 
-            foreach (var kvp in _sizeCache)
+            foreach (var tex in activeTextures)
             {
-                var original = kvp.Value.Original;
-                var optimized = kvp.Value.Optimized;
+                var sizes = _sizeCache[tex];
                 // ピクセル数ベースの概算VRAM（RGBA 4bytes/px）
-                totalOriginalBytes += (long)original * original * 4;
-                totalOptimizedBytes += (long)optimized * optimized * 4;
+                totalOriginalBytes += (long)sizes.Original * sizes.Original * 4;
+                totalOptimizedBytes += (long)sizes.Optimized * sizes.Optimized * 4;
                 textureCount++;
             }
 
