@@ -90,7 +90,7 @@ namespace TextureCropOptimizer.Tests
         }
 
         [Test]
-        public void Rebuild_PreservesTextureFormat()
+        public void Rebuild_OutputFormatIsRGBA32()
         {
             _source = new Texture2D(8, 8, TextureFormat.RGBA32, false);
             FillTexture(_source, Color.white);
@@ -98,6 +98,17 @@ namespace TextureCropOptimizer.Tests
             _result = TextureRebuilder.Rebuild(_source, new Rect(0, 0, 1, 1), 8);
 
             Assert.AreEqual(TextureFormat.RGBA32, _result.format);
+        }
+
+        [Test]
+        public void Rebuild_SetsNameWithCroppedSuffix()
+        {
+            _source = CreateTestTexture(8, 8);
+            _source.name = "MyTexture";
+
+            _result = TextureRebuilder.Rebuild(_source, new Rect(0, 0, 0.5f, 0.5f), 4);
+
+            Assert.AreEqual("MyTexture_cropped", _result.name);
         }
 
         private Texture2D CreateTestTexture(int width, int height)

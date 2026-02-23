@@ -14,6 +14,7 @@ namespace TextureCropOptimizer
         public static Material Rebuild(Material source, Dictionary<string, Texture2D> textureMap)
         {
             var copy = Object.Instantiate(source);
+            copy.name = source.name + "_optimized";
 
             foreach (var kvp in textureMap)
             {

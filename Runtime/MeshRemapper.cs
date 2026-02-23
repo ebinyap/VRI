@@ -14,6 +14,7 @@ namespace TextureCropOptimizer
         public static Mesh Remap(Mesh source, Rect usedRect)
         {
             var copy = Object.Instantiate(source);
+            copy.name = source.name + "_remapped";
 
             var uvs = copy.uv;
             for (int i = 0; i < uvs.Length; i++)

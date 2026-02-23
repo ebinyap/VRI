@@ -1,7 +1,9 @@
 {
     "name": "TextureCropOptimizer",
     "rootNamespace": "TextureCropOptimizer",
-    "references": [],
+    "references": [
+        "nadena.dev.ndmf"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
