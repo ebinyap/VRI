@@ -80,6 +80,9 @@ namespace TextureCropOptimizer
             // Rendererに新しいメッシュ・マテリアルを適用
             ApplyToRenderers(entries, materialMap, meshMap);
 
+            // 最適化サマリーを出力
+            LogOptimizationSummary(analysisResults, avatarRoot.name);
+
             TCOLogger.Info("Pipeline", "最適化が完了しました", avatarRoot.name);
         }
 
@@ -88,6 +91,43 @@ namespace TextureCropOptimizer
             public Rect UsedRect;
             public int OriginalSize;
             public int OptimizedSize;
+        }
+
+        private static void LogOptimizationSummary(
+            Dictionary<Texture2D, AnalysisResult> analysisResults, string avatarName)
+        {
+            if (analysisResults.Count == 0)
+                return;
+
+            long totalOriginalBytes = 0;
+            long totalOptimizedBytes = 0;
+
+            foreach (var kvp in analysisResults)
+            {
+                var result = kvp.Value;
+                // RGBA 4bytes/px の概算VRAM
+                totalOriginalBytes += (long)result.OriginalSize * result.OriginalSize * 4;
+                totalOptimizedBytes += (long)result.OptimizedSize * result.OptimizedSize * 4;
+            }
+
+            float reductionPercent = totalOriginalBytes > 0
+                ? (1f - (float)totalOptimizedBytes / totalOriginalBytes) * 100f
+                : 0f;
+
+            TCOLogger.Info("Pipeline",
+                $"最適化サマリー — テクスチャ: {analysisResults.Count}枚, " +
+                $"VRAM削減: {FormatBytes(totalOriginalBytes)} → {FormatBytes(totalOptimizedBytes)} " +
+                $"({reductionPercent:F0}% 削減)",
+                avatarName);
+        }
+
+        private static string FormatBytes(long bytes)
+        {
+            if (bytes >= 1024 * 1024)
+                return $"{bytes / (1024f * 1024f):F1} MB";
+            if (bytes >= 1024)
+                return $"{bytes / 1024f:F1} KB";
+            return $"{bytes} B";
         }
 
         private static AnalysisResult AnalyzeTextureGroup(Texture2D texture, TextureGroup group)

@@ -125,6 +125,61 @@ namespace TextureCropOptimizer.Tests
             Assert.AreNotSame(tex, renderer.sharedMaterial.mainTexture);
         }
 
+        [Test]
+        public void Execute_SmallUVUsage_LogsOptimizationSummary()
+        {
+            // UV使用率25%以下 → 最適化実行 → サマリーログを出力
+            _avatar = CreateAvatarWithTexture(8, 8, out var tex, out var mat, out var mesh,
+                new[] { new Vector2(0.0f, 0.0f), new Vector2(0.25f, 0.0f), new Vector2(0.0f, 0.25f) });
+
+            var settings = _avatar.AddComponent<TextureCropSettings>();
+
+            var logs = new List<string>();
+            Application.LogCallback handler = (message, stackTrace, type) => logs.Add(message);
+            Application.logMessageReceived += handler;
+            try
+            {
+                OptimizationPipeline.Execute(_avatar, settings);
+            }
+            finally
+            {
+                Application.logMessageReceived -= handler;
+            }
+
+            // サマリーログが出力されていることを検証
+            bool hasSummary = logs.Exists(log =>
+                log.Contains("最適化サマリー") &&
+                log.Contains("テクスチャ: 1") &&
+                log.Contains("VRAM削減"));
+            Assert.IsTrue(hasSummary, "最適化サマリーログが出力されていません");
+        }
+
+        [Test]
+        public void Execute_NoOptimization_DoesNotLogSummary()
+        {
+            // UV全範囲使用 → 最適化なし → サマリーログは出力されない
+            _avatar = CreateAvatarWithTexture(8, 8, out var tex, out var mat, out var mesh,
+                new[] { new Vector2(0.0f, 0.0f), new Vector2(1.0f, 0.0f), new Vector2(0.0f, 1.0f) });
+
+            var settings = _avatar.AddComponent<TextureCropSettings>();
+
+            var logs = new List<string>();
+            Application.LogCallback handler = (message, stackTrace, type) => logs.Add(message);
+            Application.logMessageReceived += handler;
+            try
+            {
+                OptimizationPipeline.Execute(_avatar, settings);
+            }
+            finally
+            {
+                Application.logMessageReceived -= handler;
+            }
+
+            // "最適化サマリー" を含むログが出力されていないことを確認
+            bool hasSummary = logs.Exists(log => log.Contains("最適化サマリー"));
+            Assert.IsFalse(hasSummary, "最適化なしの場合サマリーは出力されるべきではない");
+        }
+
         private GameObject CreateAvatarWithTexture(int texWidth, int texHeight,
             out Texture2D texture, out Material material, out Mesh mesh, Vector2[] uvs)
         {
