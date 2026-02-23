@@ -134,6 +134,95 @@ namespace TextureCropOptimizer.Tests
             Assert.AreEqual(0, result.Count);
         }
 
+        [Test]
+        public void Build_NonDefaultTiling_SkipsTexture()
+        {
+            // tiling が (2,2) → ShaderPropertyResolver が除外 → グループに含まれない
+            _matA.SetTextureScale("_MainTex", new Vector2(2f, 2f));
+
+            var entries = new List<RendererEntry>
+            {
+                new RendererEntry(_goA.GetComponent<Renderer>(), _meshA, new[] { _matA })
+            };
+
+            var result = TextureGroupBuilder.Build(entries, new HashSet<Material>());
+
+            Assert.AreEqual(0, result.Count);
+        }
+
+        [Test]
+        public void Build_NonDefaultOffset_SkipsTexture()
+        {
+            // offset が (0.5, 0) → ShaderPropertyResolver が除外 → グループに含まれない
+            _matA.SetTextureOffset("_MainTex", new Vector2(0.5f, 0f));
+
+            var entries = new List<RendererEntry>
+            {
+                new RendererEntry(_goA.GetComponent<Renderer>(), _meshA, new[] { _matA })
+            };
+
+            var result = TextureGroupBuilder.Build(entries, new HashSet<Material>());
+
+            Assert.AreEqual(0, result.Count);
+        }
+
+        [Test]
+        public void Build_NullMaterialInArray_SkipsIt()
+        {
+            // マテリアル配列にnullが含まれている場合
+            var entries = new List<RendererEntry>
+            {
+                new RendererEntry(_goA.GetComponent<Renderer>(), _meshA, new Material[] { null, _matA })
+            };
+
+            var result = TextureGroupBuilder.Build(entries, new HashSet<Material>());
+
+            // nullはスキップされ、_matA のテクスチャのみグループ化される
+            Assert.AreEqual(1, result.Count);
+            Assert.IsTrue(result.ContainsKey(_texA));
+        }
+
+        [Test]
+        public void Build_MaterialWithNoTexture_ReturnsEmptyGroups()
+        {
+            // テクスチャ未設定のマテリアル
+            var emptyMat = new Material(Shader.Find("Standard"));
+
+            var go = new GameObject("C");
+            var mf = go.AddComponent<MeshFilter>();
+            mf.sharedMesh = _meshA;
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.sharedMaterials = new[] { emptyMat };
+
+            var entries = new List<RendererEntry>
+            {
+                new RendererEntry(mr, _meshA, new[] { emptyMat })
+            };
+
+            var result = TextureGroupBuilder.Build(entries, new HashSet<Material>());
+
+            Assert.AreEqual(0, result.Count);
+
+            Object.DestroyImmediate(emptyMat);
+            Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void Build_MultipleMaterialsSameRenderer_GroupsByTexture()
+        {
+            // 同一Rendererに複数マテリアル（異なるテクスチャ）
+            var entries = new List<RendererEntry>
+            {
+                new RendererEntry(_goA.GetComponent<Renderer>(), _meshA, new[] { _matA, _matB })
+            };
+
+            var result = TextureGroupBuilder.Build(entries, new HashSet<Material>());
+
+            Assert.AreEqual(2, result.Count);
+            Assert.IsTrue(result.ContainsKey(_texA));
+            Assert.IsTrue(result.ContainsKey(_texB));
+        }
+
         private Mesh CreateSimpleMesh()
         {
             var mesh = new Mesh();
