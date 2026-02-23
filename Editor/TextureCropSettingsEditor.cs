@@ -12,6 +12,9 @@ namespace TextureCropOptimizer.Editor
     [CustomEditor(typeof(TextureCropSettings))]
     public class TextureCropSettingsEditor : UnityEditor.Editor
     {
+        // 検知結果のキャッシュ（テクスチャごとのサイズ情報）
+        private Dictionary<Texture2D, (int Original, int Optimized)> _sizeCache;
+
         public override void OnInspectorGUI()
         {
             var settings = (TextureCropSettings)target;
@@ -35,6 +38,13 @@ namespace TextureCropOptimizer.Editor
                 return;
             }
 
+            // サマリー表示
+            if (_sizeCache != null && _sizeCache.Count > 0)
+            {
+                DrawSummary(settings);
+                EditorGUILayout.Space();
+            }
+
             // エントリリスト表示
             for (int i = 0; i < settings.Entries.Count; i++)
             {
@@ -45,6 +55,12 @@ namespace TextureCropOptimizer.Editor
                 EditorGUI.BeginChangeCheck();
                 entry.Material = (Material)EditorGUILayout.ObjectField(
                     "Material", entry.Material, typeof(Material), false);
+
+                // テクスチャサイズ情報（読み取り専用）
+                if (entry.Material != null && !entry.Excluded)
+                {
+                    DrawTextureSizeInfo(entry.Material);
+                }
 
                 // 除外チェックボックス
                 entry.Excluded = EditorGUILayout.Toggle("除外する", entry.Excluded);
@@ -64,6 +80,74 @@ namespace TextureCropOptimizer.Editor
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.Space(2);
             }
+        }
+
+        private void DrawSummary(TextureCropSettings settings)
+        {
+            if (_sizeCache == null)
+                return;
+
+            int textureCount = 0;
+            long totalOriginalBytes = 0;
+            long totalOptimizedBytes = 0;
+
+            // 除外されていないマテリアルに関連するテクスチャのみ集計
+            var excludedMats = new HashSet<Material>();
+            foreach (var entry in settings.Entries)
+            {
+                if (entry.Excluded && entry.Material != null)
+                    excludedMats.Add(entry.Material);
+            }
+
+            foreach (var kvp in _sizeCache)
+            {
+                var original = kvp.Value.Original;
+                var optimized = kvp.Value.Optimized;
+                // ピクセル数ベースの概算VRAM（RGBA 4bytes/px）
+                totalOriginalBytes += (long)original * original * 4;
+                totalOptimizedBytes += (long)optimized * optimized * 4;
+                textureCount++;
+            }
+
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("最適化サマリー", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"対象テクスチャ数: {textureCount}");
+            if (totalOriginalBytes > 0)
+            {
+                float reductionPercent = (1f - (float)totalOptimizedBytes / totalOriginalBytes) * 100f;
+                EditorGUILayout.LabelField(
+                    $"推定VRAM削減: {FormatBytes(totalOriginalBytes)} → {FormatBytes(totalOptimizedBytes)} ({reductionPercent:F0}% 削減)");
+            }
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawTextureSizeInfo(Material material)
+        {
+            if (_sizeCache == null)
+                return;
+
+            var textureProps = ShaderPropertyResolver.GetUV0TextureProperties(material);
+            foreach (var propName in textureProps)
+            {
+                var tex = material.GetTexture(propName) as Texture2D;
+                if (tex != null && _sizeCache.TryGetValue(tex, out var sizes))
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.LabelField(
+                        $"{propName}: {sizes.Original}px → {sizes.Optimized}px",
+                        EditorStyles.miniLabel);
+                    EditorGUI.indentLevel--;
+                }
+            }
+        }
+
+        private static string FormatBytes(long bytes)
+        {
+            if (bytes >= 1024 * 1024)
+                return $"{bytes / (1024f * 1024f):F1} MB";
+            if (bytes >= 1024)
+                return $"{bytes / 1024f:F1} KB";
+            return $"{bytes} B";
         }
 
         private void DetectTextures(TextureCropSettings settings)
@@ -86,6 +170,9 @@ namespace TextureCropOptimizer.Editor
 
             // テクスチャグループを構築（除外なし）
             var textureGroups = TextureGroupBuilder.Build(entries, new HashSet<Material>());
+
+            // サイズキャッシュをリセット
+            _sizeCache = new Dictionary<Texture2D, (int, int)>();
 
             // 1段階以上削減できるマテリアルを判定
             var validMaterials = new HashSet<Material>();
@@ -123,6 +210,9 @@ namespace TextureCropOptimizer.Editor
 
                 if (!PowerOfTwoCalculator.IsWorthOptimizing(originalSize, optimizedSize))
                     continue;
+
+                // サイズ情報をキャッシュ
+                _sizeCache[texture] = (originalSize, optimizedSize);
 
                 // この条件を満たすマテリアルを有効リストに追加
                 foreach (var reference in group.References)
