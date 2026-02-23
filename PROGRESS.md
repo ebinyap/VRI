@@ -8,9 +8,9 @@
 ## 現在地
 
 ```
-ステータス  : 全モジュール実装完了・品質改善済み
+ステータス  : 全モジュール実装完了・品質改善・バグ修正完了
 現在のモジュール : -
-現在のフェーズ   : Unity結合テスト・UI改善
+現在のフェーズ   : Unity結合テスト・実機テスト
 最終更新    : 2026-02-23
 ```
 
@@ -23,18 +23,18 @@
 | 1 | Constants | 🟢 完了 | Tests/EditMode/ConstantsTests.cs | Runtime/Constants.cs | |
 | 2 | TCOLogger | 🟢 完了 | Tests/EditMode/TCOLoggerTests.cs | Runtime/TCOLogger.cs | Error時に例外スロー |
 | 3 | UVIslandDetector | 🟢 完了 | Tests/EditMode/UVIslandDetectorTests.cs | Runtime/UVIslandDetector.cs | Union-Find。エッジケースTST追加 |
-| 4 | UVRectCalculator | 🟢 完了 | Tests/EditMode/UVRectCalculatorTests.cs | Runtime/UVRectCalculator.cs | |
+| 4 | UVRectCalculator | 🟢 完了 | Tests/EditMode/UVRectCalculatorTests.cs | Runtime/UVRectCalculator.cs | 空入力ガード追加 |
 | 5 | PowerOfTwoCalculator | 🟢 完了 | Tests/EditMode/PowerOfTwoCalculatorTests.cs | Runtime/PowerOfTwoCalculator.cs | エッジケースTST追加 |
 | 6 | ShaderPropertyResolver | 🟢 完了 | Tests/EditMode/ShaderPropertyResolverTests.cs | Runtime/ShaderPropertyResolver.cs | Poiyomi/Liltoon UVチャンネル判定実装済み |
 | 7 | TextureReadableHandler | 🟢 完了 | Tests/EditMode/TextureReadableHandlerTests.cs | Runtime/TextureReadableHandler.cs | IDisposable |
-| 8 | TextureRebuilder | 🟢 完了 | Tests/EditMode/TextureRebuilderTests.cs | Runtime/TextureRebuilder.cs | GPU Blit。圧縮テクスチャ対応 |
-| 9 | MeshRemapper | 🟢 完了 | Tests/EditMode/MeshRemapperTests.cs | Runtime/MeshRemapper.cs | 法線・頂点保持TST追加。名前引継ぎ |
+| 8 | TextureRebuilder | 🟢 完了 | Tests/EditMode/TextureRebuilderTests.cs | Runtime/TextureRebuilder.cs | GPU Blit。圧縮テクスチャ対応。try-finally |
+| 9 | MeshRemapper | 🟢 完了 | Tests/EditMode/MeshRemapperTests.cs | Runtime/MeshRemapper.cs | 法線・頂点保持TST追加。名前引継ぎ。ゼロ除算ガード |
 | 10 | MaterialRebuilder | 🟢 完了 | Tests/EditMode/MaterialRebuilderTests.cs | Runtime/MaterialRebuilder.cs | 名前引継ぎ |
 | 11 | RendererCollector | 🟢 完了 | Tests/EditMode/RendererCollectorTests.cs | Runtime/RendererCollector.cs | 非アクティブ・複数MAT TST追加 |
-| 12 | TextureGroupBuilder | 🟢 完了 | Tests/EditMode/TextureGroupBuilderTests.cs | Runtime/TextureGroupBuilder.cs | |
+| 12 | TextureGroupBuilder | 🟢 完了 | Tests/EditMode/TextureGroupBuilderTests.cs | Runtime/TextureGroupBuilder.cs | tiling/offset/null統合テスト追加 |
 | 13 | TextureCropSettings | 🟢 完了 | Tests/EditMode/TextureCropSettingsTests.cs | Runtime/TextureCropSettings.cs | MonoBehaviour |
-| 14 | OptimizationPipeline | 🟢 完了 | Tests/EditMode/OptimizationPipelineTests.cs | Runtime/OptimizationPipeline.cs | 2フェーズ。materialMap共有修正済 |
-| 15 | TextureCropSettingsEditor | 🟢 完了 | - | Editor/TextureCropSettingsEditor.cs | エディタUI |
+| 14 | OptimizationPipeline | 🟢 完了 | Tests/EditMode/OptimizationPipelineTests.cs | Runtime/OptimizationPipeline.cs | 2フェーズ。materialMap共有修正済。サマリーログ |
+| 15 | TextureCropSettingsEditor | 🟢 完了 | - | Editor/TextureCropSettingsEditor.cs | エディタUI。サイズ・VRAM削減サマリー |
 | 16 | TextureCropOptimizerPlugin | 🟢 完了 | - | Runtime/TextureCropOptimizerPlugin.cs | NDMF。AAO/TTT/MA順序依存 |
 
 ---
@@ -43,9 +43,8 @@
 
 ```
 1. Unity上での結合テスト（NDMFパッケージ導入後）
-2. TextureCropSettingsEditor: テクスチャサイズ・削減率のUI表示
-3. OptimizationPipeline: 最適化サマリーログ（合計削減サイズ等）
-4. Poiyomi/Liltoon シェーダーでの実機テスト
+2. Poiyomi/Liltoon シェーダーでの実機テスト
+3. TextureReadableHandler: NDMF ObjectRegistry連携の検討
 ```
 
 ---
@@ -67,6 +66,13 @@
 | 2026-02-23 | TextureRebuilder: GPU Blitベースにリファクタ（圧縮テクスチャ対応） |
 | 2026-02-23 | 複製アセットに元の名前+サフィックスを設定 |
 | 2026-02-23 | package.json追加（VPM対応）、asmdefにNDMF参照追加 |
+| 2026-02-23 | TextureCropSettingsEditor: テクスチャサイズ・VRAM削減サマリーUI追加 |
+| 2026-02-23 | DrawSummary: 除外マテリアルの正しいフィルタリング修正 |
+| 2026-02-23 | OptimizationPipeline: 最適化サマリーログ出力追加 |
+| 2026-02-23 | MeshRemapper: ゼロ除算ガード追加（zero-width/height UsedRect） |
+| 2026-02-23 | UVRectCalculator: 空入力ガード追加（zero Rect返却） |
+| 2026-02-23 | TextureRebuilder: try-finallyでRenderTextureリーク防止 |
+| 2026-02-23 | TextureGroupBuilder: tiling/offset/null/multi-material統合テスト追加 |
 
 ---
 
@@ -78,6 +84,7 @@
 | 2026-02-22 | 全16モジュール初期実装完了 | 結合テスト・Poiyomi/Liltoon対応・NDMF統合 |
 | 2026-02-22 | バグ修正・テスト強化完了 | Poiyomi/Liltoon UVチャンネル判定 |
 | 2026-02-23 | 品質改善完了 | UI改善・結合テスト・実機テスト |
+| 2026-02-23 | UI改善・バグ修正・テスト強化完了 | 結合テスト・実機テスト |
 
 ---
 
