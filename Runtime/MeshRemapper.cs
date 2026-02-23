@@ -17,11 +17,13 @@ namespace TextureCropOptimizer
             copy.name = source.name + "_remapped";
 
             var uvs = copy.uv;
+            float invWidth = usedRect.width > 0f ? 1f / usedRect.width : 0f;
+            float invHeight = usedRect.height > 0f ? 1f / usedRect.height : 0f;
             for (int i = 0; i < uvs.Length; i++)
             {
                 uvs[i] = new Vector2(
-                    (uvs[i].x - usedRect.x) / usedRect.width,
-                    (uvs[i].y - usedRect.y) / usedRect.height
+                    (uvs[i].x - usedRect.x) * invWidth,
+                    (uvs[i].y - usedRect.y) * invHeight
                 );
             }
             copy.uv = uvs;

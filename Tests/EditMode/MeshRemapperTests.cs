@@ -155,6 +155,32 @@ namespace TextureCropOptimizer.Tests
             }
         }
 
+        [Test]
+        public void Remap_ZeroWidthUsedRect_DoesNotThrow()
+        {
+            // 全UV頂点が同一X座標 → UsedRect幅=0 → ゼロ除算しない
+            _source = CreateQuadMesh(
+                new Vector2(0.5f, 0.0f), new Vector2(0.5f, 0.25f),
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.75f));
+
+            var usedRect = new Rect(0.5f, 0.0f, 0.0f, 0.75f);
+
+            Assert.DoesNotThrow(() => _result = MeshRemapper.Remap(_source, usedRect));
+        }
+
+        [Test]
+        public void Remap_ZeroHeightUsedRect_DoesNotThrow()
+        {
+            // 全UV頂点が同一Y座標 → UsedRect高さ=0 → ゼロ除算しない
+            _source = CreateQuadMesh(
+                new Vector2(0.0f, 0.5f), new Vector2(0.25f, 0.5f),
+                new Vector2(0.5f, 0.5f), new Vector2(0.75f, 0.5f));
+
+            var usedRect = new Rect(0.0f, 0.5f, 0.75f, 0.0f);
+
+            Assert.DoesNotThrow(() => _result = MeshRemapper.Remap(_source, usedRect));
+        }
+
         private Mesh CreateQuadMesh(Vector2 uv0, Vector2 uv1, Vector2 uv2, Vector2 uv3)
         {
             var mesh = new Mesh();

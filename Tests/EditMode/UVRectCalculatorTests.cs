@@ -72,6 +72,19 @@ namespace TextureCropOptimizer.Tests
         }
 
         [Test]
+        public void CalculateUsedRect_EmptyList_ReturnsZeroRect()
+        {
+            var rects = new List<Rect>();
+
+            var result = UVRectCalculator.CalculateUsedRect(rects);
+
+            Assert.AreEqual(0.0f, result.x, 0.001f);
+            Assert.AreEqual(0.0f, result.y, 0.001f);
+            Assert.AreEqual(0.0f, result.width, 0.001f);
+            Assert.AreEqual(0.0f, result.height, 0.001f);
+        }
+
+        [Test]
         public void CalculateUsedRect_ThreeRects_ReturnsUnionOfAll()
         {
             var rects = new List<Rect>

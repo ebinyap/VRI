@@ -18,21 +18,26 @@ namespace TextureCropOptimizer
             var rt = RenderTexture.GetTemporary(targetSize, targetSize, 0, RenderTextureFormat.ARGB32);
             var previous = RenderTexture.active;
 
-            // UsedRect領域のみをtargetSizeにBlit
-            // scale/offsetでUsedRect領域を指定
-            Graphics.Blit(source, rt, new Vector2(usedRect.width, usedRect.height),
-                new Vector2(usedRect.x, usedRect.y));
+            try
+            {
+                // UsedRect領域のみをtargetSizeにBlit
+                // scale/offsetでUsedRect領域を指定
+                Graphics.Blit(source, rt, new Vector2(usedRect.width, usedRect.height),
+                    new Vector2(usedRect.x, usedRect.y));
 
-            RenderTexture.active = rt;
-            var result = new Texture2D(targetSize, targetSize, TextureFormat.RGBA32, false);
-            result.name = source.name + "_cropped";
-            result.ReadPixels(new Rect(0, 0, targetSize, targetSize), 0, 0);
-            result.Apply();
+                RenderTexture.active = rt;
+                var result = new Texture2D(targetSize, targetSize, TextureFormat.RGBA32, false);
+                result.name = source.name + "_cropped";
+                result.ReadPixels(new Rect(0, 0, targetSize, targetSize), 0, 0);
+                result.Apply();
 
-            RenderTexture.active = previous;
-            RenderTexture.ReleaseTemporary(rt);
-
-            return result;
+                return result;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(rt);
+            }
         }
     }
 }
