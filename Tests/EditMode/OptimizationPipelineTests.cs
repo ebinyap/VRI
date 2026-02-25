@@ -238,6 +238,75 @@ namespace TextureCropOptimizer.Tests
             Assert.Greater(newUVs[1].x, 0.5f, "リマップ後のUVは0-1範囲に広がるはず");
         }
 
+        // --- AnalyzeTextureGroup 単体テスト ---
+
+        [Test]
+        public void AnalyzeTextureGroup_SmallUV_ReturnsResult()
+        {
+            var tex = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+            var mesh = new Mesh();
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.uv = new[] { new Vector2(0, 0), new Vector2(0.25f, 0), new Vector2(0, 0.25f) };
+
+            var mat = new Material(Shader.Find("Standard"));
+            var group = new TextureGroup(tex);
+            group.References.Add((mesh, "_MainTex", mat));
+
+            var result = OptimizationPipeline.AnalyzeTextureGroup(tex, group);
+
+            Assert.IsNotNull(result);
+            Assert.Less(result.OptimizedSize, result.OriginalSize);
+
+            Object.DestroyImmediate(tex);
+            Object.DestroyImmediate(mesh);
+            Object.DestroyImmediate(mat);
+        }
+
+        [Test]
+        public void AnalyzeTextureGroup_FullUV_ReturnsNull()
+        {
+            var tex = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+            var mesh = new Mesh();
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.uv = new[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 1) };
+
+            var mat = new Material(Shader.Find("Standard"));
+            var group = new TextureGroup(tex);
+            group.References.Add((mesh, "_MainTex", mat));
+
+            var result = OptimizationPipeline.AnalyzeTextureGroup(tex, group);
+
+            Assert.IsNull(result, "全範囲使用時はnullが返るべき");
+
+            Object.DestroyImmediate(tex);
+            Object.DestroyImmediate(mesh);
+            Object.DestroyImmediate(mat);
+        }
+
+        [Test]
+        public void AnalyzeTextureGroup_UVOutOfRange_ReturnsNull()
+        {
+            var tex = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+            var mesh = new Mesh();
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.uv = new[] { new Vector2(-0.1f, 0), new Vector2(0.5f, 0), new Vector2(0, 0.5f) };
+
+            var mat = new Material(Shader.Find("Standard"));
+            var group = new TextureGroup(tex);
+            group.References.Add((mesh, "_MainTex", mat));
+
+            var result = OptimizationPipeline.AnalyzeTextureGroup(tex, group);
+
+            Assert.IsNull(result, "UV範囲外の場合はnullが返るべき");
+
+            Object.DestroyImmediate(tex);
+            Object.DestroyImmediate(mesh);
+            Object.DestroyImmediate(mat);
+        }
+
         private GameObject CreateAvatarWithTexture(int texWidth, int texHeight,
             out Texture2D texture, out Material material, out Mesh mesh, Vector2[] uvs)
         {
