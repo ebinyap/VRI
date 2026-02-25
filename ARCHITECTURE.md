@@ -290,10 +290,18 @@ namespace TextureCropOptimizer
 
 public static class OptimizationPipeline
 {
+    public class AnalysisResult { Rect UsedRect; int OriginalSize; int OptimizedSize; }
+
     /// <summary>
     /// メインの最適化フローを実行する。
     /// </summary>
     public static void Execute(GameObject avatarRoot, TextureCropSettings settings);
+
+    /// <summary>
+    /// テクスチャグループを解析し、UsedRectと最適化サイズを算出する。
+    /// Editor・Pipelineで共有される解析ロジック。
+    /// </summary>
+    public static AnalysisResult AnalyzeTextureGroup(Texture2D texture, TextureGroup group);
 }
 ```
 依存：RendererCollector, TextureGroupBuilder, UVIslandDetector, UVRectCalculator, PowerOfTwoCalculator, TextureRebuilder, MeshRemapper, MaterialRebuilder, TCOLogger
@@ -335,7 +343,7 @@ public class TextureCropSettingsEditor : Editor
     // 除外チェックON時にドロップダウンをグレーアウト
 }
 ```
-依存：TextureCropSettings, UVIslandDetector, UVRectCalculator, PowerOfTwoCalculator, ShaderPropertyResolver, RendererCollector, TextureGroupBuilder
+依存：TextureCropSettings, OptimizationPipeline, ShaderPropertyResolver, RendererCollector, TextureGroupBuilder
 
 ---
 

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -182,44 +181,19 @@ namespace TextureCropOptimizer.Editor
             _sizeCache = new Dictionary<Texture2D, (int, int)>();
 
             // 1段階以上削減できるマテリアルを判定
+            // OptimizationPipeline.AnalyzeTextureGroup を使用して解析ロジックを共有
             var validMaterials = new HashSet<Material>();
             foreach (var kvp in textureGroups)
             {
                 var texture = kvp.Key;
                 var group = kvp.Value;
 
-                // UV島検出
-                var allIslandBounds = new List<Rect>();
-                var processedMeshes = new HashSet<Mesh>();
-                bool skip = false;
-
-                foreach (var reference in group.References)
-                {
-                    if (processedMeshes.Contains(reference.Mesh))
-                        continue;
-                    processedMeshes.Add(reference.Mesh);
-
-                    var islandBounds = UVIslandDetector.DetectIslandBounds(reference.Mesh);
-                    if (islandBounds == null)
-                    {
-                        skip = true;
-                        break;
-                    }
-                    allIslandBounds.AddRange(islandBounds);
-                }
-
-                if (skip || allIslandBounds.Count == 0)
-                    continue;
-
-                var usedRect = UVRectCalculator.CalculateUsedRect(allIslandBounds);
-                int originalSize = Mathf.Max(texture.width, texture.height);
-                int optimizedSize = PowerOfTwoCalculator.Calculate(usedRect, originalSize);
-
-                if (!PowerOfTwoCalculator.IsWorthOptimizing(originalSize, optimizedSize))
+                var result = OptimizationPipeline.AnalyzeTextureGroup(texture, group);
+                if (result == null)
                     continue;
 
                 // サイズ情報をキャッシュ
-                _sizeCache[texture] = (originalSize, optimizedSize);
+                _sizeCache[texture] = (result.OriginalSize, result.OptimizedSize);
 
                 // この条件を満たすマテリアルを有効リストに追加
                 foreach (var reference in group.References)

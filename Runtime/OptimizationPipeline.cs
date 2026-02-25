@@ -86,10 +86,16 @@ namespace TextureCropOptimizer
             TCOLogger.Info("Pipeline", "最適化が完了しました", avatarRoot.name);
         }
 
-        private class AnalysisResult
+        /// <summary>
+        /// テクスチャグループの解析結果。
+        /// </summary>
+        public class AnalysisResult
         {
+            /// <summary>使用領域のRect。</summary>
             public Rect UsedRect;
+            /// <summary>元テクスチャの最大辺サイズ。</summary>
             public int OriginalSize;
+            /// <summary>最適化後のサイズ。</summary>
             public int OptimizedSize;
         }
 
@@ -131,7 +137,11 @@ namespace TextureCropOptimizer
             return $"{bytes} B";
         }
 
-        private static AnalysisResult AnalyzeTextureGroup(Texture2D texture, TextureGroup group)
+        /// <summary>
+        /// テクスチャグループを解析し、UsedRectと最適化サイズを算出する。
+        /// 最適化不要またはスキップの場合はnullを返す。
+        /// </summary>
+        public static AnalysisResult AnalyzeTextureGroup(Texture2D texture, TextureGroup group)
         {
             var allIslandBounds = new List<Rect>();
             var processedMeshes = new HashSet<Mesh>();
