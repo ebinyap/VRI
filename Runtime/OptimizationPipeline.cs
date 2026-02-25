@@ -191,12 +191,8 @@ namespace TextureCropOptimizer
             Dictionary<Material, Material> materialMap,
             Dictionary<Mesh, Mesh> meshMap)
         {
-            // テクスチャを複製・再構成
-            Texture2D newTexture;
-            using (new TextureReadableHandler(texture))
-            {
-                newTexture = TextureRebuilder.Rebuild(texture, analysis.UsedRect, analysis.OptimizedSize);
-            }
+            // テクスチャを複製・再構成（Graphics.BlitはGPU処理のためRead/Write不要）
+            var newTexture = TextureRebuilder.Rebuild(texture, analysis.UsedRect, analysis.OptimizedSize);
 
             // メッシュを複製・UV0リマップ（未処理のメッシュのみ）
             foreach (var reference in group.References)

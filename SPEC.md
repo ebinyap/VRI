@@ -44,7 +44,7 @@ NDMFのOptimizingPhaseで動作するビルド時最適化ツール。
 | プロパティ取得 | `Material.GetTexturePropertyNames()` で動的取得 |
 | UVチャンネル判定 | UV0以外が設定されているプロパティはスキップ |
 | tiling/offset | デフォルト以外（tiling≠(1,1) または offset≠(0,0)）のプロパティのみスキップ。マテリアルは続行 |
-| 非Readableテクスチャ | ビルド時に一時的にRead/Write Enabledにして処理。終了後に元に戻す |
+| 非Readableテクスチャ | Graphics.Blit（GPU処理）のためRead/Write不要。TextureReadableHandlerは使用しない |
 | マテリアルコピー | 同一テクスチャを参照する全メッシュで1つのコピーを共有 |
 
 ---
@@ -166,3 +166,4 @@ NDMFのOptimizingPhaseで動作するビルド時最適化ツール。
 | 日付 | 変更内容 | 理由 |
 |---|---|---|
 | 初版 | 全仕様を策定 | ブレインストーミングによる仕様確定 |
+| 2026-02-25 | 非Readableテクスチャ仕様変更: Graphics.Blit使用によりRead/Write不要 | GPU BlitはテクスチャのisReadable状態に依存しないため、SaveAndReimportの重い処理を回避 |

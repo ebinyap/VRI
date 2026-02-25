@@ -47,14 +47,13 @@
 [4 UV Rect
   Calculator]
         |
-   ┌────┴───────────────────┐
-   |           |            |
-[7 Texture  [8 Texture  [9 Mesh
-  Readable   Rebuilder]  Remapper]
-  Handler]
-                |
-         [10 Material
-           Rebuilder]
+   ┌──────────┬────────────┐
+   |          |            |
+[8 Texture [9 Mesh    [7 Texture
+  Rebuilder] Remapper]   Readable
+   |                     Handler]
+[10 Material              (未使用)
+  Rebuilder]
 
 [1 Logger]    ← 全モジュールから参照可
 [2 Constants] ← 全モジュールから参照可
@@ -200,7 +199,7 @@ public static class TextureRebuilder
     public static Texture2D Rebuild(Texture2D source, Rect usedRect, int targetSize);
 }
 ```
-依存：TCOLogger, TextureReadableHandler
+依存：TCOLogger（Graphics.Blit使用のためTextureReadableHandler不要）
 
 ---
 
