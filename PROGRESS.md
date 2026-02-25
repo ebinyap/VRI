@@ -78,6 +78,8 @@
 | 2026-02-25 | VRAM計算: 非正方形テクスチャの正確な計算に修正 |
 | 2026-02-25 | OptimizationPipeline: TextureReadableHandler不要化（GPU Blit移行） |
 | 2026-02-25 | SPEC.md仕様変更: 非Readableテクスチャ仕様をGPU Blit前提に更新 |
+| 2026-02-25 | OptimizationPipeline.AnalyzeTextureGroupをpublic化、Editorから共有 |
+| 2026-02-25 | TextureCropSettingsEditor: 重複解析ロジックをPipeline共有に統合 |
 
 ---
 
@@ -90,13 +92,15 @@
 | 2026-02-22 | バグ修正・テスト強化完了 | Poiyomi/Liltoon UVチャンネル判定 |
 | 2026-02-23 | 品質改善完了 | UI改善・結合テスト・実機テスト |
 | 2026-02-23 | UI改善・バグ修正・テスト強化完了 | 結合テスト・実機テスト |
+| 2026-02-25 | テスト強化・ReadableHandler不要化・解析ロジック共有化完了 | 結合テスト・実機テスト |
 
 ---
 
 ## メモ
 
 - Poiyomi: `{prop}UV` (int, 0=UV0), Liltoon: `{prop}_UVMode` (int, 0=UV0)
-- `TextureReadableHandler` はusingブロック前提
+- `TextureReadableHandler` はusingブロック前提（ただし現在未使用）
+- OptimizationPipeline.AnalyzeTextureGroupはpublic。EditorとPipelineで解析ロジック共有
 - NDMF AfterPlugin: AAO(com.anatawa12.avatar-optimizer), TTT(net.rs64.tex-trans-tool), MA(nadena.dev.modular-avatar)
 - UVIslandDetector: Union-Find（パス圧縮+ランク付き）
 - TextureRebuilder: Graphics.Blit(source, rt, scale, offset) で GPU クロップ＋リサイズ
