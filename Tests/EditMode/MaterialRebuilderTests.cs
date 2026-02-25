@@ -105,5 +105,38 @@ namespace TextureCropOptimizer.Tests
 
             Assert.AreSame(_originalTex, _result.GetTexture("_MainTex"));
         }
+
+        [Test]
+        public void Rebuild_SetsNameWithOptimizedSuffix()
+        {
+            _source = new Material(Shader.Find("Standard"));
+            _source.name = "TestMaterial";
+
+            _result = MaterialRebuilder.Rebuild(_source, new Dictionary<string, Texture2D>());
+
+            Assert.AreEqual("TestMaterial_optimized", _result.name);
+        }
+
+        [Test]
+        public void Rebuild_MultipleTextures_ReplacesAll()
+        {
+            _source = new Material(Shader.Find("Standard"));
+            _source.mainTexture = _originalTex;
+            _source.SetTexture("_BumpMap", _originalTex);
+
+            var replacement2 = new Texture2D(2, 2);
+            var textureMap = new Dictionary<string, Texture2D>
+            {
+                { "_MainTex", _replacementTex },
+                { "_BumpMap", replacement2 }
+            };
+
+            _result = MaterialRebuilder.Rebuild(_source, textureMap);
+
+            Assert.AreSame(_replacementTex, _result.GetTexture("_MainTex"));
+            Assert.AreSame(replacement2, _result.GetTexture("_BumpMap"));
+
+            Object.DestroyImmediate(replacement2);
+        }
     }
 }

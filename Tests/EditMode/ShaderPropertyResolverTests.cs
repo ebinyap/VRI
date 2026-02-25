@@ -83,5 +83,46 @@ namespace TextureCropOptimizer.Tests
 
             Assert.Contains("_MainTex", result);
         }
+
+        [Test]
+        public void IsUV0_NoUVChannelProperty_ReturnsTrue()
+        {
+            // Standard shader にはUVチャンネルプロパティがないのでUV0と見なす
+            _material = new Material(Shader.Find("Standard"));
+
+            Assert.IsTrue(ShaderPropertyResolver.IsUV0(_material, "_MainTex"));
+        }
+
+        [Test]
+        public void GetUV0TextureProperties_MultipleTexturesSet_ReturnsAll()
+        {
+            _material = new Material(Shader.Find("Standard"));
+            _material.mainTexture = Texture2D.whiteTexture;
+
+            // _BumpMapも設定（Standardシェーダーはノーマルマップを持つ）
+            _material.SetTexture("_BumpMap", Texture2D.normalTexture);
+
+            var result = ShaderPropertyResolver.GetUV0TextureProperties(_material);
+
+            Assert.Contains("_MainTex", result);
+            Assert.Contains("_BumpMap", result);
+        }
+
+        [Test]
+        public void GetUV0TextureProperties_OnlyTilingNonDefault_ExcludesOnlyThatProperty()
+        {
+            _material = new Material(Shader.Find("Standard"));
+            _material.mainTexture = Texture2D.whiteTexture;
+            _material.SetTexture("_BumpMap", Texture2D.normalTexture);
+
+            // _MainTex のtilingだけ非デフォルト
+            _material.SetTextureScale("_MainTex", new Vector2(2f, 2f));
+
+            var result = ShaderPropertyResolver.GetUV0TextureProperties(_material);
+
+            // _MainTexは除外、_BumpMapは含まれる
+            Assert.IsFalse(result.Contains("_MainTex"));
+            Assert.Contains("_BumpMap", result);
+        }
     }
 }

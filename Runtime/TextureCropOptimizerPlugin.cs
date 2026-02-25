@@ -24,6 +24,9 @@ namespace TextureCropOptimizer
                 .AfterPlugin("net.rs64.tex-trans-tool")
                 .Run("TextureCropOptimizer", ctx =>
                 {
+                    if (ctx.AvatarRootObject == null)
+                        return;
+
                     var settings = ctx.AvatarRootObject.GetComponentInChildren<TextureCropSettings>();
                     if (settings == null)
                     {

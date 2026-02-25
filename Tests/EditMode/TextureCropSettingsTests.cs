@@ -78,6 +78,46 @@ namespace TextureCropOptimizer.Tests
         }
 
         [Test]
+        public void Entries_MultipleEntries_CanBeModifiedIndependently()
+        {
+            _go = new GameObject("Avatar");
+            var settings = _go.AddComponent<TextureCropSettings>();
+            var mat1 = new Material(Shader.Find("Standard"));
+            var mat2 = new Material(Shader.Find("Standard"));
+
+            settings.Entries.Add(new MaterialEntry { Material = mat1, Excluded = false });
+            settings.Entries.Add(new MaterialEntry { Material = mat2, Excluded = true });
+
+            Assert.AreEqual(2, settings.Entries.Count);
+            Assert.IsFalse(settings.Entries[0].Excluded);
+            Assert.IsTrue(settings.Entries[1].Excluded);
+
+            // 1つ目を除外に変更しても2つ目には影響しない
+            settings.Entries[0].Excluded = true;
+            Assert.IsTrue(settings.Entries[0].Excluded);
+            Assert.IsTrue(settings.Entries[1].Excluded);
+
+            Object.DestroyImmediate(mat1);
+            Object.DestroyImmediate(mat2);
+        }
+
+        [Test]
+        public void Entries_CanBeReplacedWithNewList()
+        {
+            _go = new GameObject("Avatar");
+            var settings = _go.AddComponent<TextureCropSettings>();
+            var mat = new Material(Shader.Find("Standard"));
+
+            settings.Entries.Add(new MaterialEntry { Material = mat });
+
+            // エントリリストを丸ごと差し替え（DetectTextures相当の動作）
+            settings.Entries = new List<MaterialEntry>();
+            Assert.AreEqual(0, settings.Entries.Count);
+
+            Object.DestroyImmediate(mat);
+        }
+
+        [Test]
         public void DisallowMultipleComponent_AttributePresent()
         {
             var attributes = typeof(TextureCropSettings).GetCustomAttributes(

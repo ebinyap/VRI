@@ -237,6 +237,21 @@ namespace TextureCropOptimizer.Tests
         }
 
         [Test]
+        public void DetectIslandBounds_NoTriangles_ReturnsEmptyList()
+        {
+            // 頂点はあるが三角形なし → UV島は0個
+            _mesh = new Mesh();
+            _mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            _mesh.uv = new[] { new Vector2(0.1f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.1f, 0.5f) };
+            // trianglesを設定しない
+
+            var result = UVIslandDetector.DetectIslandBounds(_mesh);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0, result.Count);
+        }
+
+        [Test]
         public void DetectIslandBounds_PointUV_ReturnsSinglePointAABB()
         {
             // 全頂点が同じUV座標 → width=0, height=0 のRect

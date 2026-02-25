@@ -111,6 +111,36 @@ namespace TextureCropOptimizer.Tests
             Assert.AreEqual("MyTexture_cropped", _result.name);
         }
 
+        [Test]
+        public void Rebuild_NonSquareSource_ReturnsSquareTarget()
+        {
+            // 非正方形テクスチャ（16x8）→ 正方形ターゲット（4x4）
+            _source = CreateTestTexture(16, 8);
+
+            _result = TextureRebuilder.Rebuild(_source, new Rect(0, 0, 0.25f, 0.5f), 4);
+
+            Assert.AreEqual(4, _result.width);
+            Assert.AreEqual(4, _result.height);
+        }
+
+        [Test]
+        public void Rebuild_FullRangeUsedRect_ReturnsFullTexture()
+        {
+            // 全範囲使用 → 元テクスチャの内容がそのまま維持される
+            _source = new Texture2D(4, 4, TextureFormat.RGBA32, false);
+            FillTexture(_source, Color.cyan);
+
+            _result = TextureRebuilder.Rebuild(_source, new Rect(0, 0, 1, 1), 4);
+
+            var resultPixels = _result.GetPixels();
+            foreach (var pixel in resultPixels)
+            {
+                Assert.AreEqual(Color.cyan.r, pixel.r, 0.01f);
+                Assert.AreEqual(Color.cyan.g, pixel.g, 0.01f);
+                Assert.AreEqual(Color.cyan.b, pixel.b, 0.01f);
+            }
+        }
+
         private Texture2D CreateTestTexture(int width, int height)
         {
             var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
