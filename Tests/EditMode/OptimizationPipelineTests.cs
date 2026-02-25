@@ -180,6 +180,64 @@ namespace TextureCropOptimizer.Tests
             Assert.IsFalse(hasSummary, "最適化なしの場合サマリーは出力されるべきではない");
         }
 
+        [Test]
+        public void Execute_SharedMaterial_BothRenderersGetSameNewMaterial()
+        {
+            _avatar = new GameObject("Avatar");
+
+            var tex = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+            var pixels = new Color[64];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
+            tex.SetPixels(pixels);
+            tex.Apply();
+
+            var sharedMat = new Material(Shader.Find("Standard"));
+            sharedMat.mainTexture = tex;
+
+            var mesh = new Mesh();
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.uv = new[] { new Vector2(0, 0), new Vector2(0.25f, 0), new Vector2(0, 0.25f) };
+
+            // 2つのRendererが同じマテリアルを共有
+            var child1 = new GameObject("Body1");
+            child1.transform.SetParent(_avatar.transform);
+            var mf1 = child1.AddComponent<MeshFilter>();
+            mf1.sharedMesh = mesh;
+            var mr1 = child1.AddComponent<MeshRenderer>();
+            mr1.sharedMaterial = sharedMat;
+
+            var child2 = new GameObject("Body2");
+            child2.transform.SetParent(_avatar.transform);
+            var mf2 = child2.AddComponent<MeshFilter>();
+            mf2.sharedMesh = mesh;
+            var mr2 = child2.AddComponent<MeshRenderer>();
+            mr2.sharedMaterial = sharedMat;
+
+            var settings = _avatar.AddComponent<TextureCropSettings>();
+            OptimizationPipeline.Execute(_avatar, settings);
+
+            // 両方のRendererが同じ新しいマテリアルを参照
+            Assert.AreNotSame(sharedMat, mr1.sharedMaterial);
+            Assert.AreSame(mr1.sharedMaterial, mr2.sharedMaterial);
+        }
+
+        [Test]
+        public void Execute_OptimizedTexture_MeshUVsRemapped()
+        {
+            _avatar = CreateAvatarWithTexture(8, 8, out var tex, out var mat, out var mesh,
+                new[] { new Vector2(0.0f, 0.0f), new Vector2(0.25f, 0.0f), new Vector2(0.0f, 0.25f) });
+
+            var settings = _avatar.AddComponent<TextureCropSettings>();
+            OptimizationPipeline.Execute(_avatar, settings);
+
+            // メッシュのUVがリマップされている（0-1の全範囲に広がる）
+            var mf = _avatar.GetComponentInChildren<MeshFilter>();
+            var newUVs = mf.sharedMesh.uv;
+            // リマップ後: (0, 0.25) range → (0, 1) range
+            Assert.Greater(newUVs[1].x, 0.5f, "リマップ後のUVは0-1範囲に広がるはず");
+        }
+
         private GameObject CreateAvatarWithTexture(int texWidth, int texHeight,
             out Texture2D texture, out Material material, out Mesh mesh, Vector2[] uvs)
         {
