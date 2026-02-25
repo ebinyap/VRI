@@ -104,9 +104,10 @@ namespace TextureCropOptimizer
 
             foreach (var kvp in analysisResults)
             {
+                var texture = kvp.Key;
                 var result = kvp.Value;
-                // RGBA 4bytes/px の概算VRAM
-                totalOriginalBytes += (long)result.OriginalSize * result.OriginalSize * 4;
+                // RGBA 4bytes/px の概算VRAM（元テクスチャは非正方形の場合がある）
+                totalOriginalBytes += (long)texture.width * texture.height * 4;
                 totalOptimizedBytes += (long)result.OptimizedSize * result.OptimizedSize * 4;
             }
 

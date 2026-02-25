@@ -110,8 +110,8 @@ namespace TextureCropOptimizer.Editor
             foreach (var tex in activeTextures)
             {
                 var sizes = _sizeCache[tex];
-                // ピクセル数ベースの概算VRAM（RGBA 4bytes/px）
-                totalOriginalBytes += (long)sizes.Original * sizes.Original * 4;
+                // ピクセル数ベースの概算VRAM（RGBA 4bytes/px、元テクスチャは非正方形の場合がある）
+                totalOriginalBytes += (long)tex.width * tex.height * 4;
                 totalOptimizedBytes += (long)sizes.Optimized * sizes.Optimized * 4;
                 textureCount++;
             }
