@@ -122,7 +122,7 @@ namespace TextureCropOptimizer.Editor
             {
                 float reductionPercent = (1f - (float)totalOptimizedBytes / totalOriginalBytes) * 100f;
                 EditorGUILayout.LabelField(
-                    $"推定VRAM削減: {FormatBytes(totalOriginalBytes)} → {FormatBytes(totalOptimizedBytes)} ({reductionPercent:F0}% 削減)");
+                    $"推定VRAM削減: {TCOLogger.FormatBytes(totalOriginalBytes)} → {TCOLogger.FormatBytes(totalOptimizedBytes)} ({reductionPercent:F0}% 削減)");
             }
             EditorGUILayout.EndVertical();
         }
@@ -145,15 +145,6 @@ namespace TextureCropOptimizer.Editor
                     EditorGUI.indentLevel--;
                 }
             }
-        }
-
-        private static string FormatBytes(long bytes)
-        {
-            if (bytes >= 1024 * 1024)
-                return $"{bytes / (1024f * 1024f):F1} MB";
-            if (bytes >= 1024)
-                return $"{bytes / 1024f:F1} KB";
-            return $"{bytes} B";
         }
 
         private void DetectTextures(TextureCropSettings settings)

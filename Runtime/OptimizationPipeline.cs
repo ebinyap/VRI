@@ -123,18 +123,9 @@ namespace TextureCropOptimizer
 
             TCOLogger.Info("Pipeline",
                 $"最適化サマリー — テクスチャ: {analysisResults.Count}枚, " +
-                $"VRAM削減: {FormatBytes(totalOriginalBytes)} → {FormatBytes(totalOptimizedBytes)} " +
+                $"VRAM削減: {TCOLogger.FormatBytes(totalOriginalBytes)} → {TCOLogger.FormatBytes(totalOptimizedBytes)} " +
                 $"({reductionPercent:F0}% 削減)",
                 avatarName);
-        }
-
-        private static string FormatBytes(long bytes)
-        {
-            if (bytes >= 1024 * 1024)
-                return $"{bytes / (1024f * 1024f):F1} MB";
-            if (bytes >= 1024)
-                return $"{bytes / 1024f:F1} KB";
-            return $"{bytes} B";
         }
 
         /// <summary>

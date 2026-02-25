@@ -76,5 +76,36 @@ namespace TextureCropOptimizer.Tests
             Assert.Throws<Exception>(() =>
                 TCOLogger.Error("TestCategory", "Error message", "BrokenAsset", "Error detail", "Check the asset settings"));
         }
+
+        [Test]
+        public void FormatBytes_Bytes_ReturnsB()
+        {
+            Assert.AreEqual("512 B", TCOLogger.FormatBytes(512));
+        }
+
+        [Test]
+        public void FormatBytes_Kilobytes_ReturnsKB()
+        {
+            Assert.AreEqual("1.0 KB", TCOLogger.FormatBytes(1024));
+        }
+
+        [Test]
+        public void FormatBytes_Megabytes_ReturnsMB()
+        {
+            Assert.AreEqual("1.0 MB", TCOLogger.FormatBytes(1024 * 1024));
+        }
+
+        [Test]
+        public void FormatBytes_LargeMB_ReturnsFormattedMB()
+        {
+            // 64MB = 67108864 bytes
+            Assert.AreEqual("64.0 MB", TCOLogger.FormatBytes(64L * 1024 * 1024));
+        }
+
+        [Test]
+        public void FormatBytes_Zero_ReturnsZeroB()
+        {
+            Assert.AreEqual("0 B", TCOLogger.FormatBytes(0));
+        }
     }
 }

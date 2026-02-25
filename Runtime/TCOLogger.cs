@@ -69,5 +69,17 @@ namespace TextureCropOptimizer
             Debug.LogError(errorMessage);
             throw new Exception(errorMessage);
         }
+
+        /// <summary>
+        /// バイト数を人間が読みやすい形式に変換する。
+        /// </summary>
+        public static string FormatBytes(long bytes)
+        {
+            if (bytes >= 1024 * 1024)
+                return $"{bytes / (1024f * 1024f):F1} MB";
+            if (bytes >= 1024)
+                return $"{bytes / 1024f:F1} KB";
+            return $"{bytes} B";
+        }
     }
 }
