@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using TextureCropOptimizer;
 
 namespace TextureCropOptimizer.Tests
@@ -107,6 +109,8 @@ namespace TextureCropOptimizer.Tests
                 new[] { new Vector2(-0.1f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.1f, 0.5f) }
             );
 
+            LogAssert.Expect(LogType.Warning, new Regex(@"頂点0.*UV\("));
+
             var result = UVIslandDetector.DetectIslandBounds(mesh);
 
             Assert.IsNull(result);
@@ -120,6 +124,8 @@ namespace TextureCropOptimizer.Tests
                 new[] { 0, 1, 2 },
                 new[] { new Vector2(0.1f, 0.1f), new Vector2(1.1f, 0.1f), new Vector2(0.1f, 0.5f) }
             );
+
+            LogAssert.Expect(LogType.Warning, new Regex(@"頂点1.*UV\("));
 
             var result = UVIslandDetector.DetectIslandBounds(mesh);
 
@@ -217,6 +223,8 @@ namespace TextureCropOptimizer.Tests
                 new[] { new Vector2(0.1f, -0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.1f, 0.5f) }
             );
 
+            LogAssert.Expect(LogType.Warning, new Regex(@"頂点0.*UV\("));
+
             var result = UVIslandDetector.DetectIslandBounds(mesh);
 
             Assert.IsNull(result);
@@ -230,6 +238,8 @@ namespace TextureCropOptimizer.Tests
                 new[] { 0, 1, 2 },
                 new[] { new Vector2(0.1f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.1f, 1.5f) }
             );
+
+            LogAssert.Expect(LogType.Warning, new Regex(@"頂点2.*UV\("));
 
             var result = UVIslandDetector.DetectIslandBounds(mesh);
 
@@ -309,9 +319,29 @@ namespace TextureCropOptimizer.Tests
                 new[] { new Vector2(-0.1f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.1f, 0.5f) }
             );
 
+            LogAssert.Expect(LogType.Warning, new Regex(@"頂点0.*UV\("));
+
             var result = UVIslandDetector.DetectIslandBounds(mesh);
 
             Assert.IsNull(result, "明確な範囲外はnullを返すべき");
+        }
+
+        [Test]
+        public void DetectIslandBounds_UVOutOfRange_LogsWarningWithVertexInfo()
+        {
+            // 範囲外UV時、どの頂点がどのUV値で範囲外かWarningログに出力される
+            var mesh = CreateMesh(
+                new[] { Vector3.zero, Vector3.right, Vector3.up },
+                new[] { 0, 1, 2 },
+                new[] { new Vector2(0.1f, 0.1f), new Vector2(1.5f, 0.1f), new Vector2(0.1f, 0.5f) }
+            );
+
+            // 頂点1のUV(1.5, 0.1)が範囲外 → Warningに頂点インデックスとUV値が含まれること
+            LogAssert.Expect(LogType.Warning, new Regex(@"頂点1.*UV\(1\.5"));
+
+            var result = UVIslandDetector.DetectIslandBounds(mesh);
+
+            Assert.IsNull(result);
         }
     }
 }

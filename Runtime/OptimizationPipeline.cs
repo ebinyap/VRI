@@ -148,7 +148,8 @@ namespace TextureCropOptimizer
                 {
                     TCOLogger.Warning("Pipeline",
                         "UV0が範囲外またはUVなし。スキップします",
-                        texture.name);
+                        texture.name,
+                        detail: $"Mesh: {reference.Mesh.name}");
                     return null;
                 }
 

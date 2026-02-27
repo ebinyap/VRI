@@ -89,6 +89,8 @@
 | 2026-02-27 | TextureCropOptimizerPlugin: try-catchエラーハンドリング追加。QualifiedName設定 |
 | 2026-02-27 | TextureCropOptimizerPlugin: AfterPlugin削除（NDMF QualifiedName不一致で無効だったため） |
 | 2026-02-27 | TextureCropSettingsEditor: テクスチャサムネイル＋名前＋クリックでProjectハイライト表示 |
+| 2026-02-27 | UVIslandDetector: 範囲外UV検出時に頂点インデックスとUV座標値をWarningログ出力 |
+| 2026-02-27 | OptimizationPipeline: UV範囲外スキップ時のWarningにメッシュ名を追加 |
 
 ---
 

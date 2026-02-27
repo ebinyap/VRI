@@ -32,7 +32,12 @@ namespace TextureCropOptimizer
                 float y = uvs[i].y;
 
                 if (x < -UVEpsilon || x > 1f + UVEpsilon || y < -UVEpsilon || y > 1f + UVEpsilon)
+                {
+                    TCOLogger.Warning("UVIslandDetector",
+                        "UV0が範囲外です。スキップします",
+                        detail: $"頂点{i}: UV({x}, {y})");
                     return null;
+                }
 
                 // 許容範囲内の微小誤差は0-1にclamp
                 uvs[i] = new Vector2(Mathf.Clamp01(x), Mathf.Clamp01(y));
