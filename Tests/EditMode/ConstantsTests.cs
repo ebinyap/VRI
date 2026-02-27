@@ -37,5 +37,20 @@ namespace TextureCropOptimizer.Tests
         {
             Assert.AreEqual(4, Constants.MinTextureSize);
         }
+
+        [Test]
+        public void AddComponentMenuPath_DoesNotStartWithGameObject()
+        {
+            // AddComponentMenu用パスはGameObject/プレフィックスを含まない
+            Assert.IsFalse(Constants.AddComponentMenuPath.StartsWith("GameObject/"),
+                "AddComponentMenuPathはGameObject/を含まないこと");
+        }
+
+        [Test]
+        public void AddComponentMenuPath_HasExpectedValue()
+        {
+            Assert.AreEqual("TextureCropOptimizer/TextureCropSettings",
+                Constants.AddComponentMenuPath);
+        }
     }
 }

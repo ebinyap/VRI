@@ -26,6 +26,11 @@ namespace TextureCropOptimizer
         public const float DefaultOffset = 0.0f;
 
         /// <summary>
+        /// AddComponentMenuに表示するパス（Component > Add Component メニュー用）。
+        /// </summary>
+        public const string AddComponentMenuPath = "TextureCropOptimizer/TextureCropSettings";
+
+        /// <summary>
         /// テクスチャの最小サイズ（ピクセル）。
         /// </summary>
         public const int MinTextureSize = 4;

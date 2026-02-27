@@ -44,7 +44,7 @@ NDMFのOptimizingPhaseで動作するビルド時最適化ツール。
 | プロパティ取得 | `Material.GetTexturePropertyNames()` で動的取得 |
 | UVチャンネル判定 | UV0以外が設定されているプロパティはスキップ |
 | tiling/offset | デフォルト以外（tiling≠(1,1) または offset≠(0,0)）のプロパティのみスキップ。マテリアルは続行 |
-| 非Readableテクスチャ | ビルド時に一時的にRead/Write Enabledにして処理。終了後に元に戻す |
+| 非Readableテクスチャ | Graphics.Blit（GPU処理）のためRead/Write不要 |
 | マテリアルコピー | 同一テクスチャを参照する全メッシュで1つのコピーを共有 |
 
 ---
@@ -116,16 +116,14 @@ NDMFのOptimizingPhaseで動作するビルド時最適化ツール。
 5. UsedRectから必要最小の2のべき乗サイズを算出
    └ 1段階以上小さくならない → スキップ
         ↓
-6. 非ReadableテクスチャのRead/Writeを一時有効化
+6. テクスチャを複製 → UsedRect領域をGPU Blitで再構成
         ↓
-7. テクスチャを複製 → UsedRect領域をピクセルコピーで再構成
+7. メッシュを複製 → UV0をUsedRectに合わせてリマップ
         ↓
-8. メッシュを複製 → UV0をUsedRectに合わせてリマップ
-        ↓
-9. マテリアルを複製 → 全テクスチャプロパティを再構成テクスチャに差し替え
+8. マテリアルを複製 → 全テクスチャプロパティを再構成テクスチャに差し替え
    └ tiling/offsetがデフォルト以外のプロパティはリマップ対象から除外
         ↓
-10. ビルド終了後 → 複製物を破棄・Read/Write設定を元に戻す
+9. ビルド終了後 → 複製物を破棄
 ```
 
 ---
@@ -166,3 +164,5 @@ NDMFのOptimizingPhaseで動作するビルド時最適化ツール。
 | 日付 | 変更内容 | 理由 |
 |---|---|---|
 | 初版 | 全仕様を策定 | ブレインストーミングによる仕様確定 |
+| 2026-02-25 | 非Readableテクスチャ仕様変更: Graphics.Blit使用によりRead/Write不要 | GPU BlitはテクスチャのisReadable状態に依存しないため、SaveAndReimportの重い処理を回避 |
+| 2026-02-27 | TextureReadableHandler削除。処理フロー簡素化（10→9ステップ） | GPU Blit移行により完全に不要となったため |
