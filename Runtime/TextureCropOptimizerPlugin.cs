@@ -1,3 +1,4 @@
+using System;
 using nadena.dev.ndmf;
 using UnityEngine;
 
@@ -16,16 +17,21 @@ namespace TextureCropOptimizer
         /// </summary>
         public override string DisplayName => "TextureCropOptimizer";
 
+        /// <summary>
+        /// プラグインのQualifiedName。AfterPluginでの参照に使用される。
+        /// </summary>
+        public override string QualifiedName => "com.ebinyap.texture-crop-optimizer";
+
         protected override void Configure()
         {
             InPhase(BuildPhase.Optimizing)
-                .AfterPlugin("nadena.dev.modular-avatar")
-                .AfterPlugin("com.anatawa12.avatar-optimizer")
-                .AfterPlugin("net.rs64.tex-trans-tool")
                 .Run("TextureCropOptimizer", ctx =>
                 {
                     if (ctx.AvatarRootObject == null)
+                    {
+                        TCOLogger.Info("Plugin", "AvatarRootObjectがnullです。スキップします");
                         return;
+                    }
 
                     var settings = ctx.AvatarRootObject.GetComponentInChildren<TextureCropSettings>();
                     if (settings == null)
@@ -33,7 +39,14 @@ namespace TextureCropOptimizer
                         return;
                     }
 
-                    OptimizationPipeline.Execute(ctx.AvatarRootObject, settings);
+                    try
+                    {
+                        OptimizationPipeline.Execute(ctx.AvatarRootObject, settings);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[TextureCropOptimizer] ビルド中にエラーが発生しました: {e.Message}\n{e.StackTrace}");
+                    }
                 });
         }
     }

@@ -140,11 +140,31 @@ namespace TextureCropOptimizer.Editor
                 var tex = material.GetTexture(propName) as Texture2D;
                 if (tex != null && _sizeCache.TryGetValue(tex, out var sizes))
                 {
-                    EditorGUI.indentLevel++;
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Space(EditorGUI.indentLevel * 15f + 16f);
+
+                    // サムネイル（クリックでProjectウィンドウにハイライト）
+                    var thumbnailRect = GUILayoutUtility.GetRect(
+                        32, 32, GUILayout.Width(32), GUILayout.Height(32));
+                    EditorGUI.DrawPreviewTexture(thumbnailRect, tex);
+                    if (Event.current.type == EventType.MouseDown &&
+                        thumbnailRect.Contains(Event.current.mousePosition))
+                    {
+                        EditorGUIUtility.PingObject(tex);
+                        Selection.activeObject = tex;
+                        Event.current.Use();
+                    }
+                    EditorGUIUtility.AddCursorRect(thumbnailRect, MouseCursor.Link);
+
+                    // テクスチャ名 + サイズ情報
+                    EditorGUILayout.BeginVertical();
+                    EditorGUILayout.LabelField(tex.name, EditorStyles.boldLabel);
                     EditorGUILayout.LabelField(
-                        $"{propName}: {sizes.Original}px → {sizes.Optimized}px",
+                        $"{sizes.Original}px → {sizes.Optimized}px",
                         EditorStyles.miniLabel);
-                    EditorGUI.indentLevel--;
+                    EditorGUILayout.EndVertical();
+
+                    EditorGUILayout.EndHorizontal();
                 }
             }
         }

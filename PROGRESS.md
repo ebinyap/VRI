@@ -85,6 +85,10 @@
 | 2026-02-27 | テストリソースリーク修正: RendererCollector/OptimizationPipeline各テストのMesh/Material/Texture破棄 |
 | 2026-02-27 | PowerOfTwoCalculator: requiredPixels<=0の明示的ガード追加 |
 | 2026-02-27 | TCOLoggerTests: LogAssert.Expectをログ出力前に呼び出すよう修正 |
+| 2026-02-27 | UVIslandDetector: 浮動小数点誤差許容（±1e-4）追加。AAO等処理後のメッシュ対応 |
+| 2026-02-27 | TextureCropOptimizerPlugin: try-catchエラーハンドリング追加。QualifiedName設定 |
+| 2026-02-27 | TextureCropOptimizerPlugin: AfterPlugin削除（NDMF QualifiedName不一致で無効だったため） |
+| 2026-02-27 | TextureCropSettingsEditor: テクスチャサムネイル＋名前＋クリックでProjectハイライト表示 |
 
 ---
 
