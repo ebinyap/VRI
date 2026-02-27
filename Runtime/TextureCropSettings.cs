@@ -33,7 +33,7 @@ namespace TextureCropOptimizer
     /// TextureCropOptimizerの設定コンポーネント。
     /// Avatarルートに配置し、最適化対象のマテリアル設定を保持する。
     /// </summary>
-    [AddComponentMenu(Constants.MenuPath)]
+    [AddComponentMenu(Constants.AddComponentMenuPath)]
     [DisallowMultipleComponent]
     public class TextureCropSettings : MonoBehaviour
     {

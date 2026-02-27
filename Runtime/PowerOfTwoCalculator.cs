@@ -16,6 +16,9 @@ namespace TextureCropOptimizer
             float maxExtent = Mathf.Max(usedRect.width, usedRect.height);
             int requiredPixels = Mathf.CeilToInt(maxExtent * originalSize);
 
+            if (requiredPixels <= 0)
+                return Constants.MinTextureSize;
+
             int pot = Mathf.NextPowerOfTwo(requiredPixels);
 
             if (pot > originalSize)

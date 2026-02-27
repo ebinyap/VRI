@@ -13,41 +13,44 @@ namespace TextureCropOptimizer.Tests
         public void Info_LogsWithCorrectFormat()
         {
             // SPEC: [TextureCropOptimizer] INFO | {Category} | {Message}
-            TCOLogger.Info("TestCategory", "Test message");
             LogAssert.Expect(LogType.Log,
                 "[TextureCropOptimizer] INFO | TestCategory | Test message");
+            TCOLogger.Info("TestCategory", "Test message");
         }
 
         [Test]
         public void Info_WithTarget_LogsTargetLine()
         {
-            TCOLogger.Info("TestCategory", "Test message", "MyTexture.png");
             LogAssert.Expect(LogType.Log,
                 "[TextureCropOptimizer] INFO | TestCategory | Test message\n" +
                 "  Target  : MyTexture.png");
+            TCOLogger.Info("TestCategory", "Test message", "MyTexture.png");
         }
 
         [Test]
         public void Warning_LogsWithCorrectFormat()
         {
-            TCOLogger.Warning("TestCategory", "Warning message");
             LogAssert.Expect(LogType.Warning,
                 "[TextureCropOptimizer] WARNING | TestCategory | Warning message");
+            TCOLogger.Warning("TestCategory", "Warning message");
         }
 
         [Test]
         public void Warning_WithTargetAndDetail_LogsAllLines()
         {
-            TCOLogger.Warning("TestCategory", "Warning message", "MyMesh", "Some detail");
             LogAssert.Expect(LogType.Warning,
                 "[TextureCropOptimizer] WARNING | TestCategory | Warning message\n" +
                 "  Detail  : Some detail\n" +
                 "  Target  : MyMesh");
+            TCOLogger.Warning("TestCategory", "Warning message", "MyMesh", "Some detail");
         }
 
         [Test]
         public void Error_ThrowsException()
         {
+            LogAssert.Expect(LogType.Error,
+                "[TextureCropOptimizer] ERROR | TestCategory | Error message\n" +
+                "  Action  : Build Aborted");
             Assert.Throws<Exception>(() =>
                 TCOLogger.Error("TestCategory", "Error message"));
         }

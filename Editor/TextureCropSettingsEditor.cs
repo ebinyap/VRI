@@ -50,6 +50,9 @@ namespace TextureCropOptimizer.Editor
                 var entry = settings.Entries[i];
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
+                // Undo記録は変更前に行う必要がある
+                Undo.RecordObject(settings, "TextureCropSettings変更");
+
                 // マテリアルフィールド
                 EditorGUI.BeginChangeCheck();
                 entry.Material = (Material)EditorGUILayout.ObjectField(
@@ -72,7 +75,6 @@ namespace TextureCropOptimizer.Editor
 
                 if (EditorGUI.EndChangeCheck())
                 {
-                    Undo.RecordObject(settings, "TextureCropSettings変更");
                     EditorUtility.SetDirty(settings);
                 }
 

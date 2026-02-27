@@ -9,12 +9,19 @@ namespace TextureCropOptimizer.Tests
     public class OptimizationPipelineTests
     {
         private GameObject _avatar;
+        private List<Object> _createdAssets = new List<Object>();
 
         [TearDown]
         public void TearDown()
         {
             if (_avatar != null)
                 Object.DestroyImmediate(_avatar);
+            foreach (var asset in _createdAssets)
+            {
+                if (asset != null)
+                    Object.DestroyImmediate(asset);
+            }
+            _createdAssets.Clear();
         }
 
         [Test]
@@ -186,15 +193,18 @@ namespace TextureCropOptimizer.Tests
             _avatar = new GameObject("Avatar");
 
             var tex = new Texture2D(8, 8, TextureFormat.RGBA32, false);
+            _createdAssets.Add(tex);
             var pixels = new Color[64];
             for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
             tex.SetPixels(pixels);
             tex.Apply();
 
             var sharedMat = new Material(Shader.Find("Standard"));
+            _createdAssets.Add(sharedMat);
             sharedMat.mainTexture = tex;
 
             var mesh = new Mesh();
+            _createdAssets.Add(mesh);
             mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
             mesh.triangles = new[] { 0, 1, 2 };
             mesh.uv = new[] { new Vector2(0, 0), new Vector2(0.25f, 0), new Vector2(0, 0.25f) };
@@ -313,15 +323,18 @@ namespace TextureCropOptimizer.Tests
             var avatar = new GameObject("Avatar");
 
             texture = new Texture2D(texWidth, texHeight, TextureFormat.RGBA32, false);
+            _createdAssets.Add(texture);
             var pixels = new Color[texWidth * texHeight];
             for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.white;
             texture.SetPixels(pixels);
             texture.Apply();
 
             material = new Material(Shader.Find("Standard"));
+            _createdAssets.Add(material);
             material.mainTexture = texture;
 
             mesh = new Mesh();
+            _createdAssets.Add(mesh);
             mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
             mesh.triangles = new[] { 0, 1, 2 };
             mesh.uv = uvs;

@@ -50,6 +50,7 @@
 ## 既知の問題・懸念事項
 
 - 同一メッシュが異なるUsedRectのテクスチャグループに参照される場合のUVリマップ整合性（V2課題）
+- 非正方形テクスチャのアスペクト比: 現在はmax(width,height)で正方形出力。非正方形対応はV2課題
 
 ---
 
@@ -79,6 +80,11 @@
 | 2026-02-25 | TextureCropSettingsEditor: 重複解析ロジックをPipeline共有に統合 |
 | 2026-02-25 | TCOLogger.FormatBytes追加。Pipeline/Editorの重複FormatBytesを統合 |
 | 2026-02-27 | TextureReadableHandler削除（ソース・テスト・ドキュメント全て）。モジュール数16→15 |
+| 2026-02-27 | AddComponentMenu修正: Constants.AddComponentMenuPath追加（"GameObject/"プレフィックス除去） |
+| 2026-02-27 | Editor Undo修正: RecordObjectを変更前に呼び出すよう修正 |
+| 2026-02-27 | テストリソースリーク修正: RendererCollector/OptimizationPipeline各テストのMesh/Material/Texture破棄 |
+| 2026-02-27 | PowerOfTwoCalculator: requiredPixels<=0の明示的ガード追加 |
+| 2026-02-27 | TCOLoggerTests: LogAssert.Expectをログ出力前に呼び出すよう修正 |
 
 ---
 

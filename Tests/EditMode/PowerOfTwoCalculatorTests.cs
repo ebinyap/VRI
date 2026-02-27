@@ -132,5 +132,14 @@ namespace TextureCropOptimizer.Tests
             var result = PowerOfTwoCalculator.Calculate(usedRect, 4096);
             Assert.AreEqual(2048, result);
         }
+
+        [Test]
+        public void Calculate_ZeroSizeRect_ReturnsMinTextureSize()
+        {
+            // UsedRect幅・高さが0の場合 → MinTextureSizeを返す
+            var usedRect = new Rect(0.5f, 0.5f, 0.0f, 0.0f);
+            var result = PowerOfTwoCalculator.Calculate(usedRect, 4096);
+            Assert.AreEqual(Constants.MinTextureSize, result);
+        }
     }
 }

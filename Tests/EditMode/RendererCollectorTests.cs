@@ -9,12 +9,19 @@ namespace TextureCropOptimizer.Tests
     public class RendererCollectorTests
     {
         private GameObject _root;
+        private List<Object> _createdAssets = new List<Object>();
 
         [TearDown]
         public void TearDown()
         {
             if (_root != null)
                 Object.DestroyImmediate(_root);
+            foreach (var asset in _createdAssets)
+            {
+                if (asset != null)
+                    Object.DestroyImmediate(asset);
+            }
+            _createdAssets.Clear();
         }
 
         [Test]
@@ -117,7 +124,8 @@ namespace TextureCropOptimizer.Tests
             child.transform.SetParent(_root.transform);
 
             var mf = child.AddComponent<MeshFilter>();
-            mf.sharedMesh = CreateSimpleMesh();
+            var mesh = CreateSimpleMesh();
+            mf.sharedMesh = mesh;
             var mr = child.AddComponent<MeshRenderer>();
             var mat1 = new Material(Shader.Find("Standard"));
             var mat2 = new Material(Shader.Find("Standard"));
@@ -130,6 +138,7 @@ namespace TextureCropOptimizer.Tests
             Assert.AreSame(mat1, result[0].Materials[0]);
             Assert.AreSame(mat2, result[0].Materials[1]);
 
+            Object.DestroyImmediate(mesh);
             Object.DestroyImmediate(mat1);
             Object.DestroyImmediate(mat2);
         }
@@ -161,9 +170,13 @@ namespace TextureCropOptimizer.Tests
         private void SetupMeshRenderer(GameObject go)
         {
             var mf = go.AddComponent<MeshFilter>();
-            mf.sharedMesh = CreateSimpleMesh();
+            var mesh = CreateSimpleMesh();
+            _createdAssets.Add(mesh);
+            mf.sharedMesh = mesh;
             var mr = go.AddComponent<MeshRenderer>();
-            mr.sharedMaterials = new[] { new Material(Shader.Find("Standard")) };
+            var mat = new Material(Shader.Find("Standard"));
+            _createdAssets.Add(mat);
+            mr.sharedMaterials = new[] { mat };
         }
     }
 }
