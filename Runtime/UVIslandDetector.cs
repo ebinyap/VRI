@@ -9,8 +9,14 @@ namespace TextureCropOptimizer
     public static class UVIslandDetector
     {
         /// <summary>
+        /// 浮動小数点誤差の許容範囲。
+        /// メッシュ処理（AAO等）後に微小な誤差が生じうるため、許容幅を持たせる。
+        /// </summary>
+        private const float UVEpsilon = 1e-4f;
+
+        /// <summary>
         /// メッシュのUV0からUV島を検出し、各島のAABBリストを返す。
-        /// 0–1範囲外の頂点が存在する場合はnullを返す。
+        /// 0–1範囲外の頂点が存在する場合はnullを返す（微小な浮動小数点誤差は許容）。
         /// UVが設定されていない場合もnullを返す。
         /// </summary>
         public static List<Rect> DetectIslandBounds(Mesh mesh)
@@ -19,11 +25,22 @@ namespace TextureCropOptimizer
             if (uvs == null || uvs.Length == 0)
                 return null;
 
-            // 0-1範囲チェック
+            // 0-1範囲チェック（微小な浮動小数点誤差は許容してclamp）
             for (int i = 0; i < uvs.Length; i++)
             {
-                if (uvs[i].x < 0f || uvs[i].x > 1f || uvs[i].y < 0f || uvs[i].y > 1f)
+                float x = uvs[i].x;
+                float y = uvs[i].y;
+
+                if (x < -UVEpsilon || x > 1f + UVEpsilon || y < -UVEpsilon || y > 1f + UVEpsilon)
+                {
+                    TCOLogger.Warning("UVIslandDetector",
+                        "UV0が範囲外です。スキップします",
+                        detail: $"頂点{i}: UV({x}, {y})");
                     return null;
+                }
+
+                // 許容範囲内の微小誤差は0-1にclamp
+                uvs[i] = new Vector2(Mathf.Clamp01(x), Mathf.Clamp01(y));
             }
 
             var triangles = mesh.triangles;
