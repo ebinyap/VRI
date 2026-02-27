@@ -11,7 +11,7 @@
 ステータス  : 全モジュール実装完了・品質改善・テスト強化・パフォーマンス改善完了
 現在のモジュール : -
 現在のフェーズ   : Unity結合テスト・実機テスト
-最終更新    : 2026-02-25
+最終更新    : 2026-02-27
 ```
 
 ---
@@ -26,16 +26,15 @@
 | 4 | UVRectCalculator | 🟢 完了 | Tests/EditMode/UVRectCalculatorTests.cs | Runtime/UVRectCalculator.cs | 空入力ガード追加 |
 | 5 | PowerOfTwoCalculator | 🟢 完了 | Tests/EditMode/PowerOfTwoCalculatorTests.cs | Runtime/PowerOfTwoCalculator.cs | エッジケースTST追加 |
 | 6 | ShaderPropertyResolver | 🟢 完了 | Tests/EditMode/ShaderPropertyResolverTests.cs | Runtime/ShaderPropertyResolver.cs | Poiyomi/Liltoon UVチャンネル判定実装済み |
-| 7 | TextureReadableHandler | 🟡 未使用 | Tests/EditMode/TextureReadableHandlerTests.cs | Runtime/TextureReadableHandler.cs | GPU Blit移行により不要。残存 |
-| 8 | TextureRebuilder | 🟢 完了 | Tests/EditMode/TextureRebuilderTests.cs | Runtime/TextureRebuilder.cs | GPU Blit。圧縮テクスチャ対応。try-finally |
-| 9 | MeshRemapper | 🟢 完了 | Tests/EditMode/MeshRemapperTests.cs | Runtime/MeshRemapper.cs | 法線・頂点保持TST追加。名前引継ぎ。ゼロ除算ガード |
-| 10 | MaterialRebuilder | 🟢 完了 | Tests/EditMode/MaterialRebuilderTests.cs | Runtime/MaterialRebuilder.cs | 名前引継ぎ。複数テクスチャTST追加 |
-| 11 | RendererCollector | 🟢 完了 | Tests/EditMode/RendererCollectorTests.cs | Runtime/RendererCollector.cs | 非アクティブ・複数MAT TST追加 |
-| 12 | TextureGroupBuilder | 🟢 完了 | Tests/EditMode/TextureGroupBuilderTests.cs | Runtime/TextureGroupBuilder.cs | tiling/offset/null統合テスト追加 |
-| 13 | TextureCropSettings | 🟢 完了 | Tests/EditMode/TextureCropSettingsTests.cs | Runtime/TextureCropSettings.cs | MonoBehaviour |
-| 14 | OptimizationPipeline | 🟢 完了 | Tests/EditMode/OptimizationPipelineTests.cs | Runtime/OptimizationPipeline.cs | 2フェーズ。materialMap共有。サマリーログ。ReadableHandler不要化 |
-| 15 | TextureCropSettingsEditor | 🟢 完了 | - | Editor/TextureCropSettingsEditor.cs | エディタUI。サイズ・VRAM削減サマリー |
-| 16 | TextureCropOptimizerPlugin | 🟢 完了 | - | Runtime/TextureCropOptimizerPlugin.cs | NDMF。AAO/TTT/MA順序依存。nullガード |
+| 7 | TextureRebuilder | 🟢 完了 | Tests/EditMode/TextureRebuilderTests.cs | Runtime/TextureRebuilder.cs | GPU Blit。圧縮テクスチャ対応。try-finally |
+| 8 | MeshRemapper | 🟢 完了 | Tests/EditMode/MeshRemapperTests.cs | Runtime/MeshRemapper.cs | 法線・頂点保持TST追加。名前引継ぎ。ゼロ除算ガード |
+| 9 | MaterialRebuilder | 🟢 完了 | Tests/EditMode/MaterialRebuilderTests.cs | Runtime/MaterialRebuilder.cs | 名前引継ぎ。複数テクスチャTST追加 |
+| 10 | RendererCollector | 🟢 完了 | Tests/EditMode/RendererCollectorTests.cs | Runtime/RendererCollector.cs | 非アクティブ・複数MAT TST追加 |
+| 11 | TextureGroupBuilder | 🟢 完了 | Tests/EditMode/TextureGroupBuilderTests.cs | Runtime/TextureGroupBuilder.cs | tiling/offset/null統合テスト追加 |
+| 12 | TextureCropSettings | 🟢 完了 | Tests/EditMode/TextureCropSettingsTests.cs | Runtime/TextureCropSettings.cs | MonoBehaviour |
+| 13 | OptimizationPipeline | 🟢 完了 | Tests/EditMode/OptimizationPipelineTests.cs | Runtime/OptimizationPipeline.cs | 2フェーズ。materialMap共有。サマリーログ |
+| 14 | TextureCropSettingsEditor | 🟢 完了 | - | Editor/TextureCropSettingsEditor.cs | エディタUI。サイズ・VRAM削減サマリー |
+| 15 | TextureCropOptimizerPlugin | 🟢 完了 | - | Runtime/TextureCropOptimizerPlugin.cs | NDMF。AAO/TTT/MA順序依存。nullガード |
 
 ---
 
@@ -44,14 +43,12 @@
 ```
 1. Unity上での結合テスト（NDMFパッケージ導入後）
 2. Poiyomi/Liltoon シェーダーでの実機テスト
-3. TextureReadableHandler: 削除検討（GPU Blit移行により不要）
 ```
 
 ---
 
 ## 既知の問題・懸念事項
 
-- TextureReadableHandlerはGPU Blit移行により未使用。削除候補
 - 同一メッシュが異なるUsedRectのテクスチャグループに参照される場合のUVリマップ整合性（V2課題）
 
 ---
@@ -81,6 +78,7 @@
 | 2026-02-25 | OptimizationPipeline.AnalyzeTextureGroupをpublic化、Editorから共有 |
 | 2026-02-25 | TextureCropSettingsEditor: 重複解析ロジックをPipeline共有に統合 |
 | 2026-02-25 | TCOLogger.FormatBytes追加。Pipeline/Editorの重複FormatBytesを統合 |
+| 2026-02-27 | TextureReadableHandler削除（ソース・テスト・ドキュメント全て）。モジュール数16→15 |
 
 ---
 
@@ -100,7 +98,6 @@
 ## メモ
 
 - Poiyomi: `{prop}UV` (int, 0=UV0), Liltoon: `{prop}_UVMode` (int, 0=UV0)
-- `TextureReadableHandler` はusingブロック前提（ただし現在未使用）
 - OptimizationPipeline.AnalyzeTextureGroupはpublic。EditorとPipelineで解析ロジック共有
 - NDMF AfterPlugin: AAO(com.anatawa12.avatar-optimizer), TTT(net.rs64.tex-trans-tool), MA(nadena.dev.modular-avatar)
 - UVIslandDetector: Union-Find（パス圧縮+ランク付き）

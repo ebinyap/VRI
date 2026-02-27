@@ -12,16 +12,15 @@
 | 4 | UV Rect Calculator | `UVRectCalculator` | 島のAABB和集合→UsedRect確定 |
 | 5 | Power Of Two Calculator | `PowerOfTwoCalculator` | 必要最小2のべき乗サイズの算出・閾値判定 |
 | 6 | Shader Property Resolver | `ShaderPropertyResolver` | シェーダーごとのプロパティ・UVチャンネル解決 |
-| 7 | Texture Readable Handler | `TextureReadableHandler` | Read/Writeの一時有効化・復元 |
-| 8 | Texture Rebuilder | `TextureRebuilder` | テクスチャ複製・UsedRect領域のピクセルコピー再構成 |
-| 9 | Mesh Remapper | `MeshRemapper` | メッシュ複製・UV0のリマップ |
-| 10 | Material Rebuilder | `MaterialRebuilder` | マテリアル複製・テクスチャプロパティ差し替え |
-| 11 | Renderer Collector | `RendererCollector` | Avatar配下のRenderer・Mesh・Materialを収集 |
-| 12 | Texture Group Builder | `TextureGroupBuilder` | テクスチャ単位でMesh・Materialをグループ化 |
-| 13 | Optimization Pipeline | `OptimizationPipeline` | 全モジュールを順序通り呼び出すメインフロー |
-| 14 | Settings Component | `TextureCropSettings` | Unityコンポーネント（設定データ保持） |
-| 15 | Settings Editor | `TextureCropSettingsEditor` | インスペクターUI・検知ボタン |
-| 16 | NDMF Plugin | `TextureCropOptimizerPlugin` | NDMFへの登録・フェーズ制御 |
+| 7 | Texture Rebuilder | `TextureRebuilder` | テクスチャ複製・UsedRect領域のピクセルコピー再構成 |
+| 8 | Mesh Remapper | `MeshRemapper` | メッシュ複製・UV0のリマップ |
+| 9 | Material Rebuilder | `MaterialRebuilder` | マテリアル複製・テクスチャプロパティ差し替え |
+| 10 | Renderer Collector | `RendererCollector` | Avatar配下のRenderer・Mesh・Materialを収集 |
+| 11 | Texture Group Builder | `TextureGroupBuilder` | テクスチャ単位でMesh・Materialをグループ化 |
+| 12 | Optimization Pipeline | `OptimizationPipeline` | 全モジュールを順序通り呼び出すメインフロー |
+| 13 | Settings Component | `TextureCropSettings` | Unityコンポーネント（設定データ保持） |
+| 14 | Settings Editor | `TextureCropSettingsEditor` | インスペクターUI・検知ボタン |
+| 15 | NDMF Plugin | `TextureCropOptimizerPlugin` | NDMFへの登録・フェーズ制御 |
 
 ---
 
@@ -31,13 +30,13 @@
 横断依存は禁止。
 
 ```
-[16 NDMF Plugin]
+[15 NDMF Plugin]
         |
-[13 Optimization Pipeline]
+[12 Optimization Pipeline]
         |
    ┌────┴──────────────────────────┐
    |                               |
-[11 Renderer Collector]   [12 Texture Group Builder]
+[10 Renderer Collector]   [11 Texture Group Builder]
                                    |
         ┌──────────────────────────┤
         |              |           |
@@ -47,18 +46,18 @@
 [4 UV Rect
   Calculator]
         |
-   ┌──────────┬────────────┐
-   |          |            |
-[8 Texture [9 Mesh    [7 Texture
-  Rebuilder] Remapper]   Readable
-   |                     Handler]
-[10 Material              (未使用)
+   ┌──────────┐
+   |          |
+[7 Texture [8 Mesh
+  Rebuilder] Remapper]
+   |
+[9 Material
   Rebuilder]
 
 [1 Logger]    ← 全モジュールから参照可
 [2 Constants] ← 全モジュールから参照可
-[14 Settings Component] ← OptimizationPipeline・SettingsEditorから参照
-[15 Settings Editor]    ← Unityエディタのみ
+[13 Settings Component] ← OptimizationPipeline・SettingsEditorから参照
+[14 Settings Editor]    ← Unityエディタのみ
 ```
 
 ---
@@ -170,24 +169,7 @@ public static class ShaderPropertyResolver
 
 ---
 
-### 7. TextureReadableHandler
-```csharp
-namespace TextureCropOptimizer
-
-public class TextureReadableHandler : IDisposable
-{
-    /// <summary>
-    /// コンストラクタでRead/Writeを一時有効化し、Disposeで元に戻す。
-    /// </summary>
-    public TextureReadableHandler(Texture2D texture);
-    public void Dispose();
-}
-```
-依存：TCOLogger
-
----
-
-### 8. TextureRebuilder
+### 7. TextureRebuilder
 ```csharp
 namespace TextureCropOptimizer
 
@@ -199,11 +181,11 @@ public static class TextureRebuilder
     public static Texture2D Rebuild(Texture2D source, Rect usedRect, int targetSize);
 }
 ```
-依存：TCOLogger（Graphics.Blit使用のためTextureReadableHandler不要）
+依存：TCOLogger（Graphics.Blit使用）
 
 ---
 
-### 9. MeshRemapper
+### 8. MeshRemapper
 ```csharp
 namespace TextureCropOptimizer
 
@@ -219,7 +201,7 @@ public static class MeshRemapper
 
 ---
 
-### 10. MaterialRebuilder
+### 9. MaterialRebuilder
 ```csharp
 namespace TextureCropOptimizer
 
@@ -235,7 +217,7 @@ public static class MaterialRebuilder
 
 ---
 
-### 11. RendererCollector
+### 10. RendererCollector
 ```csharp
 namespace TextureCropOptimizer
 
@@ -258,7 +240,7 @@ public readonly struct RendererEntry
 
 ---
 
-### 12. TextureGroupBuilder
+### 11. TextureGroupBuilder
 ```csharp
 namespace TextureCropOptimizer
 
@@ -284,7 +266,7 @@ public class TextureGroup
 
 ---
 
-### 13. OptimizationPipeline
+### 12. OptimizationPipeline
 ```csharp
 namespace TextureCropOptimizer
 
@@ -308,7 +290,7 @@ public static class OptimizationPipeline
 
 ---
 
-### 14. TextureCropSettings（Unityコンポーネント）
+### 13. TextureCropSettings（Unityコンポーネント）
 ```csharp
 namespace TextureCropOptimizer
 
@@ -331,7 +313,7 @@ public enum UVRotationMode { Normal, EmissionFixed }
 
 ---
 
-### 15. TextureCropSettingsEditor（Unityエディタ）
+### 14. TextureCropSettingsEditor（Unityエディタ）
 ```csharp
 namespace TextureCropOptimizer.Editor
 
@@ -347,7 +329,7 @@ public class TextureCropSettingsEditor : Editor
 
 ---
 
-### 16. TextureCropOptimizerPlugin（NDMFプラグイン）
+### 15. TextureCropOptimizerPlugin（NDMFプラグイン）
 ```csharp
 namespace TextureCropOptimizer
 
@@ -372,7 +354,6 @@ Tests/
 │   ├── UVRectCalculatorTests.cs
 │   ├── PowerOfTwoCalculatorTests.cs
 │   ├── ShaderPropertyResolverTests.cs
-│   ├── TextureReadableHandlerTests.cs
 │   ├── TextureRebuilderTests.cs
 │   ├── MeshRemapperTests.cs
 │   ├── MaterialRebuilderTests.cs
@@ -394,14 +375,13 @@ Tests/
 4. UVRectCalculator
 5. PowerOfTwoCalculator
 6. ShaderPropertyResolver
-7. TextureReadableHandler
-8. TextureRebuilder
-9. MeshRemapper
-10. MaterialRebuilder
-11. RendererCollector
-12. TextureGroupBuilder
+7. TextureRebuilder
+8. MeshRemapper
+9. MaterialRebuilder
+10. RendererCollector
+11. TextureGroupBuilder
+12. OptimizationPipeline
 13. TextureCropSettings（コンポーネント）
-14. OptimizationPipeline
-15. TextureCropSettingsEditor
-16. TextureCropOptimizerPlugin
+14. TextureCropSettingsEditor
+15. TextureCropOptimizerPlugin
 ```
