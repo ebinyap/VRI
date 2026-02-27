@@ -80,6 +80,7 @@
 | 2026-02-25 | SPEC.md仕様変更: 非Readableテクスチャ仕様をGPU Blit前提に更新 |
 | 2026-02-25 | OptimizationPipeline.AnalyzeTextureGroupをpublic化、Editorから共有 |
 | 2026-02-25 | TextureCropSettingsEditor: 重複解析ロジックをPipeline共有に統合 |
+| 2026-02-25 | TCOLogger.FormatBytes追加。Pipeline/Editorの重複FormatBytesを統合 |
 
 ---
 
