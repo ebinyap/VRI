@@ -93,10 +93,14 @@ namespace TextureCropOptimizer
         {
             /// <summary>使用領域のRect。</summary>
             public Rect UsedRect;
-            /// <summary>元テクスチャの最大辺サイズ。</summary>
-            public int OriginalSize;
-            /// <summary>最適化後のサイズ。</summary>
-            public int OptimizedSize;
+            /// <summary>元テクスチャの幅。</summary>
+            public int OriginalWidth;
+            /// <summary>元テクスチャの高さ。</summary>
+            public int OriginalHeight;
+            /// <summary>最適化後の幅。</summary>
+            public int OptimizedWidth;
+            /// <summary>最適化後の高さ。</summary>
+            public int OptimizedHeight;
         }
 
         private static void LogOptimizationSummary(
@@ -112,9 +116,9 @@ namespace TextureCropOptimizer
             {
                 var texture = kvp.Key;
                 var result = kvp.Value;
-                // RGBA 4bytes/px の概算VRAM（元テクスチャは非正方形の場合がある）
+                // RGBA 4bytes/px の概算VRAM
                 totalOriginalBytes += (long)texture.width * texture.height * 4;
-                totalOptimizedBytes += (long)result.OptimizedSize * result.OptimizedSize * 4;
+                totalOptimizedBytes += (long)result.OptimizedWidth * result.OptimizedHeight * 4;
             }
 
             float reductionPercent = totalOriginalBytes > 0
@@ -163,26 +167,30 @@ namespace TextureCropOptimizer
             }
 
             var usedRect = UVRectCalculator.CalculateUsedRect(allIslandBounds);
-            int originalSize = Mathf.Max(texture.width, texture.height);
-            int optimizedSize = PowerOfTwoCalculator.Calculate(usedRect, originalSize);
+            int origW = texture.width;
+            int origH = texture.height;
+            int optW = PowerOfTwoCalculator.CalculateAxis(usedRect.width, origW);
+            int optH = PowerOfTwoCalculator.CalculateAxis(usedRect.height, origH);
 
-            if (!PowerOfTwoCalculator.IsWorthOptimizing(originalSize, optimizedSize))
+            if (!PowerOfTwoCalculator.IsWorthOptimizing(origW, origH, optW, optH))
             {
                 TCOLogger.Info("Pipeline",
-                    $"サイズ削減が不十分です（{originalSize} → {optimizedSize}）。スキップします",
+                    $"サイズ削減が不十分です（{origW}x{origH} → {optW}x{optH}）。スキップします",
                     texture.name);
                 return null;
             }
 
             TCOLogger.Info("Pipeline",
-                $"テクスチャを最適化します: {originalSize} → {optimizedSize}",
+                $"テクスチャを最適化します: {origW}x{origH} → {optW}x{optH}",
                 texture.name);
 
             return new AnalysisResult
             {
                 UsedRect = usedRect,
-                OriginalSize = originalSize,
-                OptimizedSize = optimizedSize
+                OriginalWidth = origW,
+                OriginalHeight = origH,
+                OptimizedWidth = optW,
+                OptimizedHeight = optH
             };
         }
 
@@ -194,7 +202,7 @@ namespace TextureCropOptimizer
             Dictionary<Mesh, Mesh> meshMap)
         {
             // テクスチャを複製・再構成（Graphics.BlitはGPU処理のためRead/Write不要）
-            var newTexture = TextureRebuilder.Rebuild(texture, analysis.UsedRect, analysis.OptimizedSize);
+            var newTexture = TextureRebuilder.Rebuild(texture, analysis.UsedRect, analysis.OptimizedWidth, analysis.OptimizedHeight);
 
             // メッシュを複製・UV0リマップ（未処理のメッシュのみ）
             foreach (var reference in group.References)

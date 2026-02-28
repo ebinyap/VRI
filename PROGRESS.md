@@ -50,7 +50,6 @@
 ## 既知の問題・懸念事項
 
 - 同一メッシュが異なるUsedRectのテクスチャグループに参照される場合のUVリマップ整合性（V2課題）
-- 非正方形テクスチャのアスペクト比: 現在はmax(width,height)で正方形出力。非正方形対応はV2課題
 
 ---
 
@@ -93,6 +92,7 @@
 | 2026-02-27 | OptimizationPipeline: UV範囲外スキップ時のWarningにメッシュ名を追加 |
 | 2026-02-28 | TextureCropOptimizerPlugin: AfterPlugin再追加（QualifiedName検証済み。AAO/TTT/MA未インストール時は自動無視） |
 | 2026-02-28 | TextureCropSettingsEditor: 検知ボタンをNDMF AvatarProcessor経由に変更。AAO/MA/TTT処理後のメッシュで解析。失敗時は従来の検知にフォールバック |
+| 2026-02-28 | 非正方形テクスチャ対応: PowerOfTwoCalculator.CalculateAxis追加（幅・高さ独立PoT算出）。TextureRebuilder.Rebuild(w,h)オーバーロード追加。AnalysisResult Width/Height分離。Editor UI非正方形表示対応。VRAM計算修正（正方形仮定バグ修正）。V2課題から前倒し |
 
 ---
 

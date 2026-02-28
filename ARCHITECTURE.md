@@ -138,14 +138,24 @@ namespace TextureCropOptimizer
 public static class PowerOfTwoCalculator
 {
     /// <summary>
-    /// UsedRectとオリジナルサイズから必要最小の2のべき乗サイズを算出する。
+    /// UsedRectとオリジナルサイズから必要最小の2のべき乗サイズを算出する。（正方形用・後方互換）
     /// </summary>
     public static int Calculate(Rect usedRect, int originalSize);
 
     /// <summary>
-    /// 最適化が有効かどうかを判定する（1段階以上小さくなるか）。
+    /// UV使用範囲のextentとオリジナルの辺サイズから、その軸の必要最小2のべき乗サイズを算出する。
+    /// </summary>
+    public static int CalculateAxis(float extent, int originalDimension);
+
+    /// <summary>
+    /// 最適化が有効かどうかを判定する（1段階以上小さくなるか）。（正方形用・後方互換）
     /// </summary>
     public static bool IsWorthOptimizing(int originalSize, int optimizedSize);
+
+    /// <summary>
+    /// 幅・高さ独立で最適化が有効かどうかを判定する（いずれかの軸が1段階以上小さくなるか）。
+    /// </summary>
+    public static bool IsWorthOptimizing(int origW, int origH, int optW, int optH);
 }
 ```
 依存：なし
@@ -176,9 +186,14 @@ namespace TextureCropOptimizer
 public static class TextureRebuilder
 {
     /// <summary>
-    /// UsedRectに対応するピクセル領域を新しいテクスチャとして再構成して返す。
+    /// UsedRectに対応するピクセル領域を新しいテクスチャとして再構成して返す。（正方形用・後方互換）
     /// </summary>
     public static Texture2D Rebuild(Texture2D source, Rect usedRect, int targetSize);
+
+    /// <summary>
+    /// UsedRectに対応するピクセル領域を指定の幅・高さで新しいテクスチャとして再構成して返す。
+    /// </summary>
+    public static Texture2D Rebuild(Texture2D source, Rect usedRect, int targetWidth, int targetHeight);
 }
 ```
 依存：TCOLogger（Graphics.Blit使用）
@@ -272,7 +287,7 @@ namespace TextureCropOptimizer
 
 public static class OptimizationPipeline
 {
-    public class AnalysisResult { Rect UsedRect; int OriginalSize; int OptimizedSize; }
+    public class AnalysisResult { Rect UsedRect; int OriginalWidth; int OriginalHeight; int OptimizedWidth; int OptimizedHeight; }
 
     /// <summary>
     /// メインの最適化フローを実行する。

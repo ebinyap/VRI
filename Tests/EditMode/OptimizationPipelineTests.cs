@@ -266,7 +266,8 @@ namespace TextureCropOptimizer.Tests
             var result = OptimizationPipeline.AnalyzeTextureGroup(tex, group);
 
             Assert.IsNotNull(result);
-            Assert.Less(result.OptimizedSize, result.OriginalSize);
+            Assert.Less(result.OptimizedWidth, result.OriginalWidth);
+            Assert.Less(result.OptimizedHeight, result.OriginalHeight);
 
             Object.DestroyImmediate(tex);
             Object.DestroyImmediate(mesh);
@@ -289,6 +290,62 @@ namespace TextureCropOptimizer.Tests
             var result = OptimizationPipeline.AnalyzeTextureGroup(tex, group);
 
             Assert.IsNull(result, "全範囲使用時はnullが返るべき");
+
+            Object.DestroyImmediate(tex);
+            Object.DestroyImmediate(mesh);
+            Object.DestroyImmediate(mat);
+        }
+
+        [Test]
+        public void AnalyzeTextureGroup_NonSquareTexture_HeightOnlyReduction_ReturnsResult()
+        {
+            // 非正方形テクスチャ（16x8）で高さのみ削減可能なケース
+            // UV: (0,0)-(1.0,0.25) → 幅は全使用、高さは1/4のみ使用
+            // 旧ロジック: max(1.0, 0.25)*16=16=originalSize → null
+            // 新ロジック: width=16(変化なし), height=ceil(0.25*8)=2 → PoT=2 < 8 → non-null
+            var tex = new Texture2D(16, 8, TextureFormat.RGBA32, false);
+            var mesh = new Mesh();
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.uv = new[] { new Vector2(0, 0), new Vector2(1.0f, 0), new Vector2(0, 0.25f) };
+
+            var mat = new Material(Shader.Find("Standard"));
+            var group = new TextureGroup(tex);
+            group.References.Add((mesh, "_MainTex", mat));
+
+            var result = OptimizationPipeline.AnalyzeTextureGroup(tex, group);
+
+            Assert.IsNotNull(result, "高さのみ削減可能な場合もnon-nullが返るべき");
+            Assert.AreEqual(16, result.OriginalWidth);
+            Assert.AreEqual(8, result.OriginalHeight);
+            Assert.AreEqual(16, result.OptimizedWidth, "幅は変化なし");
+            Assert.Less(result.OptimizedHeight, result.OriginalHeight, "高さは削減されるべき");
+
+            Object.DestroyImmediate(tex);
+            Object.DestroyImmediate(mesh);
+            Object.DestroyImmediate(mat);
+        }
+
+        [Test]
+        public void AnalyzeTextureGroup_NonSquareTexture_BothAxesReduction_ReturnsResult()
+        {
+            // 非正方形テクスチャ（16x8）で両軸削減可能
+            // UV: (0,0)-(0.25,0.25) → 幅も高さも1/4のみ使用
+            var tex = new Texture2D(16, 8, TextureFormat.RGBA32, false);
+            var mesh = new Mesh();
+            mesh.vertices = new[] { Vector3.zero, Vector3.right, Vector3.up };
+            mesh.triangles = new[] { 0, 1, 2 };
+            mesh.uv = new[] { new Vector2(0, 0), new Vector2(0.25f, 0), new Vector2(0, 0.25f) };
+
+            var mat = new Material(Shader.Find("Standard"));
+            var group = new TextureGroup(tex);
+            group.References.Add((mesh, "_MainTex", mat));
+
+            var result = OptimizationPipeline.AnalyzeTextureGroup(tex, group);
+
+            Assert.IsNotNull(result);
+            Assert.Less(result.OptimizedWidth, result.OriginalWidth);
+            Assert.Less(result.OptimizedHeight, result.OriginalHeight);
 
             Object.DestroyImmediate(tex);
             Object.DestroyImmediate(mesh);

@@ -124,6 +124,30 @@ namespace TextureCropOptimizer.Tests
         }
 
         [Test]
+        public void Rebuild_NonSquareTarget_ReturnsCorrectDimensions()
+        {
+            // 8x8ソース → 非正方形ターゲット（4x8）
+            _source = CreateTestTexture(8, 8);
+
+            _result = TextureRebuilder.Rebuild(_source, new Rect(0, 0, 0.5f, 1.0f), 4, 8);
+
+            Assert.AreEqual(4, _result.width);
+            Assert.AreEqual(8, _result.height);
+        }
+
+        [Test]
+        public void Rebuild_NonSquareTarget_WidthOnly_ReturnsCorrectDimensions()
+        {
+            // AAOケース: 256x1024 → 256x512相当
+            _source = CreateTestTexture(8, 16);
+
+            _result = TextureRebuilder.Rebuild(_source, new Rect(0, 0, 1.0f, 0.5f), 8, 8);
+
+            Assert.AreEqual(8, _result.width);
+            Assert.AreEqual(8, _result.height);
+        }
+
+        [Test]
         public void Rebuild_FullRangeUsedRect_ReturnsFullTexture()
         {
             // 全範囲使用 → 元テクスチャの内容がそのまま維持される

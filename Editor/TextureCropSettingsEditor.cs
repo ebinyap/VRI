@@ -13,8 +13,8 @@ namespace TextureCropOptimizer.Editor
     [CustomEditor(typeof(TextureCropSettings))]
     public class TextureCropSettingsEditor : UnityEditor.Editor
     {
-        // 検知結果のキャッシュ（テクスチャごとのサイズ情報）
-        private Dictionary<Texture2D, (int Original, int Optimized)> _sizeCache;
+        // 検知結果のキャッシュ（テクスチャごとのサイズ情報: 元幅, 元高さ, 最適化幅, 最適化高さ）
+        private Dictionary<Texture2D, (int OrigW, int OrigH, int OptW, int OptH)> _sizeCache;
 
         public override void OnInspectorGUI()
         {
@@ -113,9 +113,9 @@ namespace TextureCropOptimizer.Editor
             foreach (var tex in activeTextures)
             {
                 var sizes = _sizeCache[tex];
-                // ピクセル数ベースの概算VRAM（RGBA 4bytes/px、元テクスチャは非正方形の場合がある）
+                // ピクセル数ベースの概算VRAM（RGBA 4bytes/px）
                 totalOriginalBytes += (long)tex.width * tex.height * 4;
-                totalOptimizedBytes += (long)sizes.Optimized * sizes.Optimized * 4;
+                totalOptimizedBytes += (long)sizes.OptW * sizes.OptH * 4;
                 textureCount++;
             }
 
@@ -162,7 +162,7 @@ namespace TextureCropOptimizer.Editor
                     EditorGUILayout.BeginVertical();
                     EditorGUILayout.LabelField(tex.name, EditorStyles.boldLabel);
                     EditorGUILayout.LabelField(
-                        $"{sizes.Original}px → {sizes.Optimized}px",
+                        $"{sizes.OrigW}x{sizes.OrigH} → {sizes.OptW}x{sizes.OptH}",
                         EditorStyles.miniLabel);
                     EditorGUILayout.EndVertical();
 
@@ -217,16 +217,16 @@ namespace TextureCropOptimizer.Editor
 
                 // 最適化可能テクスチャを特定（テクスチャはアセット参照なので同一インスタンス）
                 var optimizableTextures =
-                    new Dictionary<Texture2D, (int OriginalSize, int OptimizedSize)>();
+                    new Dictionary<Texture2D, (int OrigW, int OrigH, int OptW, int OptH)>();
                 foreach (var kvp in processedGroups)
                 {
                     var result = OptimizationPipeline.AnalyzeTextureGroup(kvp.Key, kvp.Value);
                     if (result != null)
-                        optimizableTextures[kvp.Key] = (result.OriginalSize, result.OptimizedSize);
+                        optimizableTextures[kvp.Key] = (result.OriginalWidth, result.OriginalHeight, result.OptimizedWidth, result.OptimizedHeight);
                 }
 
                 // サイズキャッシュ更新
-                _sizeCache = new Dictionary<Texture2D, (int, int)>();
+                _sizeCache = new Dictionary<Texture2D, (int, int, int, int)>();
                 foreach (var kvp in optimizableTextures)
                     _sizeCache[kvp.Key] = kvp.Value;
 
@@ -265,7 +265,7 @@ namespace TextureCropOptimizer.Editor
             var entries = RendererCollector.Collect(avatarRoot);
             var textureGroups = TextureGroupBuilder.Build(entries, new HashSet<Material>());
 
-            _sizeCache = new Dictionary<Texture2D, (int, int)>();
+            _sizeCache = new Dictionary<Texture2D, (int, int, int, int)>();
 
             var validMaterials = new HashSet<Material>();
             foreach (var kvp in textureGroups)
@@ -274,7 +274,7 @@ namespace TextureCropOptimizer.Editor
                 if (result == null)
                     continue;
 
-                _sizeCache[kvp.Key] = (result.OriginalSize, result.OptimizedSize);
+                _sizeCache[kvp.Key] = (result.OriginalWidth, result.OriginalHeight, result.OptimizedWidth, result.OptimizedHeight);
 
                 foreach (var reference in kvp.Value.References)
                     validMaterials.Add(reference.Material);

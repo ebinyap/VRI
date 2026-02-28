@@ -141,5 +141,98 @@ namespace TextureCropOptimizer.Tests
             var result = PowerOfTwoCalculator.Calculate(usedRect, 4096);
             Assert.AreEqual(Constants.MinTextureSize, result);
         }
+
+        // --- CalculateAxis: 軸ごとのPoT計算 ---
+
+        [Test]
+        public void CalculateAxis_HalfExtent_ReturnsHalfSize()
+        {
+            // extent=0.5, 4096 → 2048
+            var result = PowerOfTwoCalculator.CalculateAxis(0.5f, 4096);
+            Assert.AreEqual(2048, result);
+        }
+
+        [Test]
+        public void CalculateAxis_FullExtent_ReturnsSameSize()
+        {
+            var result = PowerOfTwoCalculator.CalculateAxis(1.0f, 4096);
+            Assert.AreEqual(4096, result);
+        }
+
+        [Test]
+        public void CalculateAxis_QuarterExtent_ReturnsQuarterSize()
+        {
+            var result = PowerOfTwoCalculator.CalculateAxis(0.25f, 4096);
+            Assert.AreEqual(1024, result);
+        }
+
+        [Test]
+        public void CalculateAxis_SlightlyOverHalf_RoundsToNextPoT()
+        {
+            // 0.51 * 4096 = 2089 → 次のPoT = 4096
+            var result = PowerOfTwoCalculator.CalculateAxis(0.51f, 4096);
+            Assert.AreEqual(4096, result);
+        }
+
+        [Test]
+        public void CalculateAxis_ZeroExtent_ReturnsMinSize()
+        {
+            var result = PowerOfTwoCalculator.CalculateAxis(0.0f, 4096);
+            Assert.AreEqual(Constants.MinTextureSize, result);
+        }
+
+        [Test]
+        public void CalculateAxis_SmallDimension_256()
+        {
+            // extent=0.5, 256 → 128
+            var result = PowerOfTwoCalculator.CalculateAxis(0.5f, 256);
+            Assert.AreEqual(128, result);
+        }
+
+        [Test]
+        public void CalculateAxis_NonSquareTexture_WidthFull_HeightHalf()
+        {
+            // AAOケース: 256x1024テクスチャ
+            // 幅: extent=1.0, 256 → 256
+            // 高さ: extent=0.5, 1024 → 512
+            var widthResult = PowerOfTwoCalculator.CalculateAxis(1.0f, 256);
+            var heightResult = PowerOfTwoCalculator.CalculateAxis(0.5f, 1024);
+            Assert.AreEqual(256, widthResult);
+            Assert.AreEqual(512, heightResult);
+        }
+
+        [Test]
+        public void CalculateAxis_OneEighth_Returns512()
+        {
+            var result = PowerOfTwoCalculator.CalculateAxis(0.125f, 4096);
+            Assert.AreEqual(512, result);
+        }
+
+        // --- IsWorthOptimizing: 幅・高さ独立判定 ---
+
+        [Test]
+        public void IsWorthOptimizing_WidthHeight_WidthReduced_ReturnsTrue()
+        {
+            Assert.IsTrue(PowerOfTwoCalculator.IsWorthOptimizing(4096, 4096, 2048, 4096));
+        }
+
+        [Test]
+        public void IsWorthOptimizing_WidthHeight_HeightReduced_ReturnsTrue()
+        {
+            // AAOケース: 256x1024 → 256x512
+            Assert.IsTrue(PowerOfTwoCalculator.IsWorthOptimizing(256, 1024, 256, 512));
+        }
+
+        [Test]
+        public void IsWorthOptimizing_WidthHeight_BothReduced_ReturnsTrue()
+        {
+            Assert.IsTrue(PowerOfTwoCalculator.IsWorthOptimizing(4096, 4096, 2048, 2048));
+        }
+
+        [Test]
+        public void IsWorthOptimizing_WidthHeight_NeitherReduced_ReturnsFalse()
+        {
+            Assert.IsFalse(PowerOfTwoCalculator.IsWorthOptimizing(256, 1024, 256, 1024));
+        }
     }
 }
