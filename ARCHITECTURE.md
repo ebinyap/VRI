@@ -57,7 +57,7 @@
 [1 Logger]    ← 全モジュールから参照可
 [2 Constants] ← 全モジュールから参照可
 [13 Settings Component] ← OptimizationPipeline・SettingsEditorから参照
-[14 Settings Editor]    ← Unityエディタのみ
+[14 Settings Editor]    ← Unityエディタのみ。NDMF AvatarProcessor使用（検知時）
 ```
 
 ---
@@ -325,7 +325,7 @@ public class TextureCropSettingsEditor : Editor
     // 除外チェックON時にドロップダウンをグレーアウト
 }
 ```
-依存：TextureCropSettings, OptimizationPipeline, ShaderPropertyResolver, RendererCollector, TextureGroupBuilder
+依存：TextureCropSettings, OptimizationPipeline, ShaderPropertyResolver, RendererCollector, TextureGroupBuilder, NDMF AvatarProcessor
 
 ---
 

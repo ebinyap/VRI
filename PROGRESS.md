@@ -92,6 +92,7 @@
 | 2026-02-27 | UVIslandDetector: 範囲外UV検出時に頂点インデックスとUV座標値をWarningログ出力 |
 | 2026-02-27 | OptimizationPipeline: UV範囲外スキップ時のWarningにメッシュ名を追加 |
 | 2026-02-28 | TextureCropOptimizerPlugin: AfterPlugin再追加（QualifiedName検証済み。AAO/TTT/MA未インストール時は自動無視） |
+| 2026-02-28 | TextureCropSettingsEditor: 検知ボタンをNDMF AvatarProcessor経由に変更。AAO/MA/TTT処理後のメッシュで解析。失敗時は従来の検知にフォールバック |
 
 ---
 

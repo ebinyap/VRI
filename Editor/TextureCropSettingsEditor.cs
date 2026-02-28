@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using nadena.dev.ndmf;
 using UnityEditor;
 using UnityEngine;
 
@@ -173,10 +175,119 @@ namespace TextureCropOptimizer.Editor
         {
             Undo.RecordObject(settings, "テクスチャを検知");
 
+            try
+            {
+                DetectWithNDMFProcessing(settings);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(
+                    $"[TextureCropOptimizer] NDMF処理に失敗しました。従来の検知を実行します: {e.Message}");
+                DetectWithoutNDMFProcessing(settings);
+            }
+        }
+
+        /// <summary>
+        /// NDMF処理後のクローンを解析してテクスチャを検知する。
+        /// AAO/MA/TTT等のメッシュ削除・最適化が反映された状態で解析される。
+        /// </summary>
+        private void DetectWithNDMFProcessing(TextureCropSettings settings)
+        {
+            var avatarRoot = settings.gameObject;
+
+            // アバターをクローン
+            var clone = UnityEngine.Object.Instantiate(avatarRoot);
+            clone.name = avatarRoot.name + "_TCO_Temp";
+
+            try
+            {
+                // クローンからTextureCropSettingsを除去（TCO自体は実行させない）
+                foreach (var tcoSettings in clone.GetComponentsInChildren<TextureCropSettings>(true))
+                {
+                    UnityEngine.Object.DestroyImmediate(tcoSettings);
+                }
+
+                // NDMF処理を実行（AAO/MA/TTT等が適用される。EditorOnlyも除去される）
+                AvatarProcessor.ProcessAvatar(clone);
+
+                // 処理後のクローンを解析
+                var processedEntries = RendererCollector.Collect(clone);
+                var processedGroups = TextureGroupBuilder.Build(
+                    processedEntries, new HashSet<Material>());
+
+                // 最適化可能テクスチャを特定（テクスチャはアセット参照なので同一インスタンス）
+                var optimizableTextures =
+                    new Dictionary<Texture2D, (int OriginalSize, int OptimizedSize)>();
+                foreach (var kvp in processedGroups)
+                {
+                    var result = OptimizationPipeline.AnalyzeTextureGroup(kvp.Key, kvp.Value);
+                    if (result != null)
+                        optimizableTextures[kvp.Key] = (result.OriginalSize, result.OptimizedSize);
+                }
+
+                // サイズキャッシュ更新
+                _sizeCache = new Dictionary<Texture2D, (int, int)>();
+                foreach (var kvp in optimizableTextures)
+                    _sizeCache[kvp.Key] = kvp.Value;
+
+                // 元アバターのマテリアルから、最適化対象テクスチャを参照するものを特定
+                var originalEntries = RendererCollector.Collect(avatarRoot);
+                var validMaterials = new HashSet<Material>();
+                foreach (var entry in originalEntries)
+                {
+                    foreach (var mat in entry.Materials)
+                    {
+                        if (mat == null) continue;
+                        var props = ShaderPropertyResolver.GetUV0TextureProperties(mat);
+                        foreach (var propName in props)
+                        {
+                            var tex = mat.GetTexture(propName) as Texture2D;
+                            if (tex != null && optimizableTextures.ContainsKey(tex))
+                                validMaterials.Add(mat);
+                        }
+                    }
+                }
+
+                BuildEntryList(settings, validMaterials);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(clone);
+            }
+        }
+
+        /// <summary>
+        /// NDMF処理なしの従来の検知ロジック（フォールバック）。
+        /// </summary>
+        private void DetectWithoutNDMFProcessing(TextureCropSettings settings)
+        {
             var avatarRoot = settings.gameObject;
             var entries = RendererCollector.Collect(avatarRoot);
+            var textureGroups = TextureGroupBuilder.Build(entries, new HashSet<Material>());
 
-            // 現在のエントリの設定を保持するためのマップ
+            _sizeCache = new Dictionary<Texture2D, (int, int)>();
+
+            var validMaterials = new HashSet<Material>();
+            foreach (var kvp in textureGroups)
+            {
+                var result = OptimizationPipeline.AnalyzeTextureGroup(kvp.Key, kvp.Value);
+                if (result == null)
+                    continue;
+
+                _sizeCache[kvp.Key] = (result.OriginalSize, result.OptimizedSize);
+
+                foreach (var reference in kvp.Value.References)
+                    validMaterials.Add(reference.Material);
+            }
+
+            BuildEntryList(settings, validMaterials);
+        }
+
+        /// <summary>
+        /// 有効なマテリアルセットからエントリリストを構築する（既存設定マージ）。
+        /// </summary>
+        private void BuildEntryList(TextureCropSettings settings, HashSet<Material> validMaterials)
+        {
             var existingSettings = new Dictionary<Material, MaterialEntry>();
             if (settings.Entries != null)
             {
@@ -187,35 +298,6 @@ namespace TextureCropOptimizer.Editor
                 }
             }
 
-            // テクスチャグループを構築（除外なし）
-            var textureGroups = TextureGroupBuilder.Build(entries, new HashSet<Material>());
-
-            // サイズキャッシュをリセット
-            _sizeCache = new Dictionary<Texture2D, (int, int)>();
-
-            // 1段階以上削減できるマテリアルを判定
-            // OptimizationPipeline.AnalyzeTextureGroup を使用して解析ロジックを共有
-            var validMaterials = new HashSet<Material>();
-            foreach (var kvp in textureGroups)
-            {
-                var texture = kvp.Key;
-                var group = kvp.Value;
-
-                var result = OptimizationPipeline.AnalyzeTextureGroup(texture, group);
-                if (result == null)
-                    continue;
-
-                // サイズ情報をキャッシュ
-                _sizeCache[texture] = (result.OriginalSize, result.OptimizedSize);
-
-                // この条件を満たすマテリアルを有効リストに追加
-                foreach (var reference in group.References)
-                {
-                    validMaterials.Add(reference.Material);
-                }
-            }
-
-            // 新しいエントリリストを構築（既存設定をマージ）
             var newEntries = new List<MaterialEntry>();
             foreach (var mat in validMaterials)
             {
