@@ -11,7 +11,7 @@
 ステータス  : 全モジュール実装完了・品質改善・テスト強化・パフォーマンス改善完了
 現在のモジュール : -
 現在のフェーズ   : Unity結合テスト・実機テスト
-最終更新    : 2026-02-27
+最終更新    : 2026-02-28
 ```
 
 ---
@@ -91,6 +91,7 @@
 | 2026-02-27 | TextureCropSettingsEditor: テクスチャサムネイル＋名前＋クリックでProjectハイライト表示 |
 | 2026-02-27 | UVIslandDetector: 範囲外UV検出時に頂点インデックスとUV座標値をWarningログ出力 |
 | 2026-02-27 | OptimizationPipeline: UV範囲外スキップ時のWarningにメッシュ名を追加 |
+| 2026-02-28 | TextureCropOptimizerPlugin: AfterPlugin再追加（QualifiedName検証済み。AAO/TTT/MA未インストール時は自動無視） |
 
 ---
 
