@@ -2,7 +2,8 @@
     "name": "TextureCropOptimizer.Editor",
     "rootNamespace": "TextureCropOptimizer.Editor",
     "references": [
-        "TextureCropOptimizer"
+        "TextureCropOptimizer",
+        "nadena.dev.ndmf"
     ],
     "includePlatforms": [
         "Editor"
